@@ -8,7 +8,7 @@ setlocal enabledelayedexpansion
 set APP_NAME=Himanshi Travels
 set APP_DIR=%~dp0
 set VENV_DIR=%APP_DIR%.venv
-set DEFAULT_PORT=8080
+set DEFAULT_PORT=8081
 set DEFAULT_HOST=127.0.0.1
 
 :: Colors (if supported)
@@ -49,7 +49,7 @@ cd /d "%APP_DIR%"
 call "%VENV_DIR%\Scripts\activate.bat"
 echo [SUCCESS] Application will be available at: http://%DEFAULT_HOST%:%DEFAULT_PORT%
 echo [INFO] Press Ctrl+C to stop the application
-python app.py
+"%VENV_DIR%\Scripts\python.exe" app.py
 goto :eof
 
 :stop
@@ -170,7 +170,7 @@ goto :eof
 :setup_db
 echo [INFO] Setting up database...
 cd /d "%APP_DIR%"
-python -c "from database import init_db; init_db(); print('Database initialized successfully')"
+"%VENV_DIR%\Scripts\python.exe" -c "from database import init_db; init_db(); print('Database initialized successfully')"
 if %errorlevel% neq 0 (
     echo [ERROR] Database setup failed
     pause
@@ -182,7 +182,7 @@ goto :eof
 :test_app
 echo [INFO] Testing application...
 cd /d "%APP_DIR%"
-python -c "import app; print('Application imports successful')"
+"%VENV_DIR%\Scripts\python.exe" -c "import app; print('Application imports successful')"
 if %errorlevel% neq 0 (
     echo [ERROR] Application test failed
     pause

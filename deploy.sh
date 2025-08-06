@@ -257,10 +257,10 @@ start_application() {
     cd "$APP_DIR"
     
     # Check if port is in use
-    if lsof -Pi :$DEFAULT_PORT -sTCP:LISTEN -t >/dev/null ; then
-        print_warning "Port $DEFAULT_PORT is already in use"
+    if lsof -Pi :8081 -sTCP:LISTEN -t >/dev/null ; then
+        print_warning "Port 8081 is already in use"
         print_status "Killing existing process..."
-        lsof -ti:$DEFAULT_PORT | xargs kill -9 2>/dev/null || true
+        lsof -ti:8081 | xargs kill -9 2>/dev/null || true
         sleep 2
     fi
     
@@ -268,10 +268,10 @@ start_application() {
     source "$VENV_DIR/bin/activate"
     
     print_success "Starting $APP_NAME..."
-    print_success "Application will be available at: http://$DEFAULT_HOST:$DEFAULT_PORT"
+    print_success "Application will be available at: http://$DEFAULT_HOST:8081"
     print_status "Press Ctrl+C to stop the application"
     
-    $PYTHON_CMD app.py
+    "$VENV_DIR/bin/python" app.py
 }
 
 # Function to show usage
@@ -294,8 +294,8 @@ show_usage() {
 stop_application() {
     print_status "Stopping application..."
     
-    if lsof -Pi :$DEFAULT_PORT -sTCP:LISTEN -t >/dev/null ; then
-        lsof -ti:$DEFAULT_PORT | xargs kill -9 2>/dev/null || true
+    if lsof -Pi :8081 -sTCP:LISTEN -t >/dev/null ; then
+        lsof -ti:8081 | xargs kill -9 2>/dev/null || true
         print_success "Application stopped"
     else
         print_warning "Application is not running"
@@ -304,9 +304,9 @@ stop_application() {
 
 # Function to check status
 check_status() {
-    if lsof -Pi :$DEFAULT_PORT -sTCP:LISTEN -t >/dev/null ; then
-        print_success "Application is running on port $DEFAULT_PORT"
-        echo "Available at: http://$DEFAULT_HOST:$DEFAULT_PORT"
+    if lsof -Pi :8081 -sTCP:LISTEN -t >/dev/null ; then
+        print_success "Application is running on port 8081"
+        echo "Available at: http://$DEFAULT_HOST:8081"
     else
         print_warning "Application is not running"
     fi

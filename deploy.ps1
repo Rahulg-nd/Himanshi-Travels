@@ -11,7 +11,7 @@ param(
 $APP_NAME = "Himanshi Travels"
 $APP_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 $VENV_DIR = Join-Path $APP_DIR ".venv"
-$DEFAULT_PORT = "8080"
+$DEFAULT_PORT = "8081"
 $DEFAULT_HOST = "127.0.0.1"
 $PYTHON_MIN_VERSION = [Version]"3.8.0"
 
@@ -189,7 +189,7 @@ function Set-Database {
     Write-Status "Setting up database..."
     
     Set-Location $APP_DIR
-    python -c @"
+    & (Join-Path $VENV_DIR "Scripts\python.exe") -c @"
 from database import init_db
 init_db()
 print('Database initialized successfully')
@@ -207,7 +207,7 @@ function Test-Application {
     Write-Status "Testing application..."
     
     Set-Location $APP_DIR
-    python -c @"
+    & (Join-Path $VENV_DIR "Scripts\python.exe") -c @"
 import app
 print('Application imports successful')
 "@
@@ -300,7 +300,7 @@ function Start-Application {
     Write-Success "Application will be available at: http://${DEFAULT_HOST}:${DEFAULT_PORT}"
     Write-Status "Press Ctrl+C to stop the application"
     
-    python app.py
+    & (Join-Path $VENV_DIR "Scripts\python.exe") app.py
 }
 
 # Function to stop application

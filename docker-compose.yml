@@ -4,7 +4,7 @@ services:
   himanshi-travels:
     build: .
     ports:
-      - "8080:8080"
+      - "8081:8081"
     volumes:
       - ./bills:/app/bills
       - ./logs:/app/logs
@@ -14,7 +14,7 @@ services:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
       interval: 30s
       timeout: 10s
       retries: 3
