@@ -166,7 +166,7 @@ def search_bookings(query: str = "", booking_type: str = "", page: int = 1, per_
         params = []
         
         # Build dynamic query for fetching results
-        sql = '''SELECT id, name, email, phone, booking_type, total, date, 
+        sql = '''SELECT id, name, email, phone, booking_type, base_amount, gst, total, date, 
                         hotel_name, hotel_city, operator_name, from_journey, to_journey,
                         vehicle_number, service_date, service_time, is_group_booking
                  FROM bookings WHERE 1=1'''

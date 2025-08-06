@@ -145,8 +145,8 @@ function generateAmountDetails(booking) {
         <div class="detail-group">
             <h4>Amount Details</h4>
             <p>Base: ₹${parseFloat(booking.base_amount || 0).toFixed(2)}</p>
-            <p>GST: ₹${parseFloat(booking.gst_amount || 0).toFixed(2)}</p>
-            <p><strong>Total: ₹${parseFloat(booking.total_amount || 0).toFixed(2)}</strong></p>
+            <p>GST: ₹${parseFloat(booking.gst || 0).toFixed(2)}</p>
+            <p><strong>Total: ₹${parseFloat(booking.total || 0).toFixed(2)}</strong></p>
         </div>
     `;
 }
