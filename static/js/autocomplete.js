@@ -100,11 +100,11 @@ class AutoComplete {
             if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
                 this.showSuggestions(data.suggestions);
             } else {
-                console.log('No suggestions or empty array');
+                console.log('No suggestions found or empty response');
                 this.hideSuggestions();
             }
         } catch (error) {
-            console.error('AutoComplete error:', error);
+            console.error('AutoComplete API error:', error);
             this.hideSuggestions();
         }
     }
@@ -153,10 +153,10 @@ class AutoComplete {
                 <div class="suggestion-detail">${suggestion.code}${popular}</div>
             `;
         } else {
-            // Format city suggestions
+            // Format city suggestions - show state/region if available
             return `
                 <div class="suggestion-main">${suggestion.name}</div>
-                <div class="suggestion-detail">${suggestion.country}</div>
+                <div class="suggestion-detail">${suggestion.region || ''}${suggestion.region ? ', ' : ''}${suggestion.country}</div>
             `;
         }
     }

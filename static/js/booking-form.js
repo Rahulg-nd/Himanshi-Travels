@@ -210,4 +210,12 @@ function initializeForm() {
 
     // Initialize GST calculation
     updateGstCalculation();
+    
+    // Initialize AutoComplete functionality
+    if (typeof initializeAutoComplete === 'function') {
+        console.log('Initializing AutoComplete...');
+        initializeAutoComplete();
+    } else {
+        console.warn('AutoComplete initialization function not found');
+    }
 }
