@@ -1,0 +1,30 @@
+<!-- Search Section Component -->
+<div class="search-section">
+    <div class="search-row">
+        <div class="search-group">
+            <label for="searchQuery">🔍 Search</label>
+            <input type="text" id="searchQuery" placeholder="Search by name, email, phone, hotel, operator, route...">
+        </div>
+        <div class="search-group">
+            <label for="bookingType">🎯 Booking Type</label>
+            <select id="bookingType">
+                <option value="">All Types</option>
+                <option value="Hotel">🏨 Hotel</option>
+                <option value="Flight">✈️ Flight</option>
+                <option value="Train">🚆 Train</option>
+                <option value="Bus">🚌 Bus</option>
+                <option value="Transport">🚐 Transport</option>
+            </select>
+        </div>
+        <div class="search-group" style="max-width: 150px;">
+            <label for="perPage">📄 Per Page</label>
+            <select id="perPage">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+        <button onclick="searchBookings(1)" class="search-btn">Search</button>
+    </div>
+</div>

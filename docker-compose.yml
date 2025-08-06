@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  himanshi-travels:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./bills:/app/bills
+      - ./logs:/app/logs
+      - ./db.sqlite3:/app/db.sqlite3
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - himanshi-travels
+    restart: unless-stopped
+    profiles:
+      - production

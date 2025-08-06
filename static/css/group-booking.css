@@ -1,0 +1,72 @@
+/* 
+ * Group Booking Component Styles
+ * Styles for managing multiple customers in group bookings
+ */
+
+.customer-item {
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.customer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.customer-number {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 1.1em;
+}
+
+.remove-customer {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-customer:hover {
+    background: #c82333;
+}
+
+.add-customer-btn {
+    width: 100%;
+    padding: 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.add-customer-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.total-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.2em;
+    color: #667eea;
+    margin-top: 15px;
+}

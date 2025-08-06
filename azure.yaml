@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: himanshi-travels
+metadata:
+  template: himanshi-travels@0.0.1-beta
+services:
+  web:
+    project: .
+    language: python
+    host: appservice
+    hooks:
+      postdeploy:
+        shell: sh
+        run: |
+          echo "Setting up database..."
+          python -c "from database import init_db; init_db()"
+          echo "Database initialized successfully!"

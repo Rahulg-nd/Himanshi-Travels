@@ -1,0 +1,176 @@
+<!-- Edit Booking Modal Component -->
+<div id="editModal" class="modal">
+    <div class="modal-content edit-modal">
+        <div class="modal-header">
+            <h2>Edit Booking</h2>
+            <button type="button" class="close" onclick="closeEditModal()" aria-label="Close">&times;</button>
+        </div>
+        <form id="editBookingForm" class="enhanced">
+            <input type="hidden" id="editBookingId" name="booking_id">
+            
+            <!-- Group Booking Toggle -->
+            <div class="form-group">
+                <label class="toggle-label">
+                    <input type="checkbox" id="editGroupBookingToggle" onchange="toggleEditGroupBooking()">
+                    <span class="toggle-slider"></span>
+                    Group Booking (Multiple Customers)
+                </label>
+            </div>
+            
+            <!-- Single Customer Fields -->
+            <div id="editSingleCustomerFields">
+                <div class="form-group">
+                    <label for="editName">Customer Name *</label>
+                    <input type="text" id="editName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editEmail">Email *</label>
+                    <input type="email" id="editEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editPhone">Phone *</label>
+                    <input type="tel" id="editPhone" name="phone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="editBookingType">Booking Type *</label>
+                <select id="editBookingType" name="booking_type" onchange="toggleEditServiceFields()" required>
+                    <option value="">Select Booking Type</option>
+                    <option value="Hotel">Hotel</option>
+                    <option value="Bus">Bus</option>
+                    <option value="Train">Train</option>
+                    <option value="Flight">Flight</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Tour Package">Tour Package</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <!-- Hotel-specific fields -->
+            <div id="editHotelFields" class="service-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="editHotelName">Hotel Name</label>
+                    <input type="text" id="editHotelName" name="hotel_name">
+                </div>
+                <div class="form-group">
+                    <label for="editHotelCity">City</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="editHotelCity" name="hotel_city" autocomplete="off">
+                        <div class="autocomplete-suggestions" id="editHotelCity_suggestions"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editHotelCountry">Country</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="editHotelCountry" name="hotel_country" autocomplete="off">
+                        <div class="autocomplete-suggestions" id="editHotelCountry_suggestions"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editHotelNumber">Hotel Number</label>
+                    <input type="text" id="editHotelNumber" name="vehicle_train_flight_hotel_number" placeholder="Hotel confirmation number">
+                </div>
+            </div>
+            
+            <!-- Transport/Flight-specific fields -->
+            <div id="editTransportFields" class="service-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="editOperatorName">Operator/Airline Name</label>
+                    <input type="text" id="editOperatorName" name="operator_name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editFromJourney">From</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="editFromJourney" name="from_journey" autocomplete="off">
+                            <div class="autocomplete-suggestions" id="editFromJourney_suggestions"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editFromCountry">From Country</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="editFromCountry" name="from_journey_country" autocomplete="off">
+                            <div class="autocomplete-suggestions" id="editFromCountry_suggestions"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editToJourney">To</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="editToJourney" name="to_journey" autocomplete="off">
+                            <div class="autocomplete-suggestions" id="editToJourney_suggestions"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editToCountry">To Country</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="editToCountry" name="to_journey_country" autocomplete="off">
+                            <div class="autocomplete-suggestions" id="editToCountry_suggestions"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editVehicleNumber">Vehicle/Train/Flight Number</label>
+                    <input type="text" id="editVehicleNumber" name="vehicle_train_flight_hotel_number" placeholder="e.g., MH12AB1234, 12345, AI123">
+                </div>
+            </div>
+            
+            <!-- Service Date and Time -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editServiceDate">Service Date</label>
+                    <input type="date" id="editServiceDate" name="service_date">
+                </div>
+                <div class="form-group">
+                    <label for="editServiceTime">Service Time</label>
+                    <input type="time" id="editServiceTime" name="service_time">
+                </div>
+            </div>
+            
+            <!-- Single Customer Amount and Seat/Room (only for non-group bookings) -->
+            <div id="editSingleAmountFields">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editBaseAmount">Base Amount (₹) *</label>
+                        <input type="number" id="editBaseAmount" name="base_amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSeatRoomNumber">Seat/Room Number</label>
+                        <input type="text" id="editSeatRoomNumber" name="seat_room_number" placeholder="e.g., A1, Room 101">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Group Customers Section -->
+            <div id="editGroupCustomersSection" style="display: none;">
+                <div class="customers-header">
+                    <div class="customers-title">
+                        <h3>👥 Customers</h3>
+                        <span class="customers-count" id="editCustomersCount">0 customers</span>
+                    </div>
+                    <button type="button" onclick="addEditCustomer()" class="btn-add-customer">
+                        <i class="icon">➕</i>
+                        <span>Add Customer</span>
+                    </button>
+                </div>
+                <div id="editCustomersList" class="customers-list">
+                    <!-- Dynamic customers will be added here -->
+                </div>
+                <div class="customers-footer" id="editCustomersFooter" style="display: none;">
+                    <div class="customers-summary">
+                        <span class="total-amount">Total: ₹<span id="editTotalAmount">0</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-buttons">
+                <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Update Booking</button>
+            </div>
+        </form>
+    </div>
+</div>

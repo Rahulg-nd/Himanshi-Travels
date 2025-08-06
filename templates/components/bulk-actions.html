@@ -1,0 +1,15 @@
+<!-- Bulk Actions Component -->
+<div id="bulkActions" class="bulk-actions">
+    <div class="bulk-actions-info">
+        <span id="selectedCount">0</span> booking(s) selected
+    </div>
+    <div class="bulk-actions-buttons">
+        <button onclick="bulkDeleteBookings()" class="bulk-btn bulk-delete-btn">🗑️ Delete Selected</button>
+        <button onclick="clearSelection()" class="bulk-btn bulk-cancel-btn">✖️ Clear Selection</button>
+    </div>
+</div>
+
+<div class="select-all-container">
+    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+    <label for="selectAll" style="cursor: pointer; user-select: none;">Select all on this page</label>
+</div>

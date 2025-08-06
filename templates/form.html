@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Booking - Himanshi Travels</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-form.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/group-booking.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/autocomplete.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkbox.css') }}">
+</head>
+<body>
+<!-- Notification Container -->
+<div id="notification-container"></div>
+
+<div class="container">
+    <div class="header">
+        <h1>✈️ Travel Booking</h1>
+        <p>Book your journey with ease and comfort</p>
+        <div style="margin-top: 20px;">
+            <a href="/bookings" style="
+                display: inline-block;
+                padding: 10px 20px;
+                background: rgba(102, 126, 234, 0.1);
+                color: #667eea;
+                text-decoration: none;
+                border-radius: 25px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: 2px solid #667eea;
+            " onmouseover="this.style.background='#667eea'; this.style.color='white';" 
+               onmouseout="this.style.background='rgba(102, 126, 234, 0.1)'; this.style.color='#667eea';"
+               onfocus="this.style.background='#667eea'; this.style.color='white';"
+               onblur="this.style.background='rgba(102, 126, 234, 0.1)'; this.style.color='#667eea';">
+                📋 View Booking History
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" id="bookingForm">
+        <!-- Customer Information -->
+        {% include 'components/customer-info.html' %}
+
+        <!-- Booking Type Selection -->
+        <div class="form-group">
+            <label for="booking_type">
+                <span class="icon">🚀</span>Type of Booking *
+            </label>
+            <select id="booking_type" name="booking_type" required onchange="toggleConditionalFields()">
+                <option value="">Select booking type</option>
+                <option value="Hotel">🏨 Hotel</option>
+                <option value="Flight">✈️ Flight</option>
+                <option value="Train">🚆 Train</option>
+                <option value="Bus">🚌 Bus</option>
+                <option value="Transport">🚐 Transport</option>
+            </select>
+        </div>
+
+        <!-- Group booking option -->
+        <div class="form-group">
+            <div class="checkbox-wrapper">
+                <label class="checkbox-container modern-checkbox">
+                    <input type="checkbox" id="is_group_booking" name="is_group_booking" value="true" onchange="toggleGroupBooking()">
+                    <span class="checkmark"></span>
+                    <span class="checkbox-text">🎉 Group Booking (Multiple customers)</span>
+                </label>
+                <div class="checkbox-description">
+                    <small>Enable this option to add multiple customers to a single booking</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hotel Fields -->
+        {% include 'components/hotel-fields.html' %}
+
+        <!-- Transport Fields -->
+        {% include 'components/transport-fields.html' %}
+
+        <!-- Service Details -->
+        {% include 'components/service-details.html' %}
+
+        <!-- Group customer management -->
+        <div id="group-customers" class="conditional-fields" style="display: none;">
+            <h3 style="color: #667eea; margin-bottom: 15px;">👥 Customer Details</h3>
+            <div id="customers-list">
+                <!-- Dynamic customer entries will be added here -->
+            </div>
+            <button type="button" class="add-customer-btn" onclick="addCustomer()">
+                ➕ Add Customer
+            </button>
+            <div class="total-section">
+                <strong>Total Amount: ₹<span id="total-amount">0.00</span></strong>
+            </div>
+        </div>
+
+        <!-- Single customer base amount (hidden for group bookings) -->
+        <div id="single-amount" class="form-group">
+            <label for="base_amount">
+                <span class="icon">💰</span>Base Charges (₹) *
+            </label>
+            <input type="number" id="base_amount" name="base_amount" placeholder="Enter base amount" min="1" step="0.01" onchange="updateTotal()">
+        </div>
+
+        <!-- GST Calculation -->
+        {% include 'components/gst-calculation.html' %}
+
+        <button type="submit" class="submit-btn">
+            🎯 Create Booking & Generate Invoice
+        </button>
+    </form>
+</div>
+
+<script>
+    // Additional form-specific JavaScript can go here
+    function toggleServiceDetails() {
+        const bookingType = document.getElementById('booking_type').value;
+        const serviceDetails = document.getElementById('service-details');
+        const vehicleDetails = document.getElementById('vehicle-details');
+        
+        if (bookingType && bookingType !== '') {
+            serviceDetails.style.display = 'flex';
+            vehicleDetails.style.display = 'block';
+        } else {
+            serviceDetails.style.display = 'none';
+            vehicleDetails.style.display = 'none';
+        }
+    }
+    
+    // Override the toggleConditionalFields to include service details
+    const originalToggleConditionalFields = window.toggleConditionalFields;
+    window.toggleConditionalFields = function() {
+        originalToggleConditionalFields();
+        toggleServiceDetails();
+    };
+</script>
+
+<!-- Load JavaScript modules -->
+<script src="{{ url_for('static', filename='js/booking-form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/single-booking.js') }}"></script>
+<script src="{{ url_for('static', filename='js/group-booking.js') }}"></script>
+<script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+
+<script>
+    // Initialize the form when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeForm();
+        console.log('Form initialized successfully');
+    });
+</script>
+
+</body>
+</html>

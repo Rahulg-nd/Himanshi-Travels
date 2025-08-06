@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking History - Himanshi Travels</title>
+    
+    <!-- External CSS Files -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bookings.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-card.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pagination.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulk-actions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/autocomplete.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer-management.css') }}">
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Edit Booking Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content edit-modal">
+            <div class="modal-header">
+                <h2>Edit Booking</h2>
+                <button type="button" class="close" onclick="closeEditModal()" aria-label="Close">&times;</button>
+            </div>
+            <form id="editBookingForm" class="enhanced">
+                <input type="hidden" id="editBookingId" name="booking_id">
+                
+                <!-- Group Booking Toggle -->
+                <div class="form-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="editGroupBookingToggle" onchange="toggleEditGroupBooking()">
+                        <span class="toggle-slider"></span>
+                        Group Booking (Multiple Customers)
+                    </label>
+                </div>
+                
+                <!-- Single Customer Fields -->
+                <div id="editSingleCustomerFields">
+                    <div class="form-group">
+                        <label for="editName">Customer Name *</label>
+                        <input type="text" id="editName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEmail">Email *</label>
+                        <input type="email" id="editEmail" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editPhone">Phone *</label>
+                        <input type="tel" id="editPhone" name="phone" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editBookingType">Booking Type *</label>
+                    <select id="editBookingType" name="booking_type" onchange="toggleEditServiceFields()" required>
+                        <option value="">Select Booking Type</option>
+                        <option value="Hotel">Hotel</option>
+                        <option value="Bus">Bus</option>
+                        <option value="Train">Train</option>
+                        <option value="Flight">Flight</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Tour Package">Tour Package</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <!-- Hotel-specific fields -->
+                <div id="editHotelFields" class="service-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="editHotelName">Hotel Name</label>
+                        <input type="text" id="editHotelName" name="hotel_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="editHotelCity">City</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="editHotelCity" name="hotel_city" autocomplete="off">
+                            <div class="autocomplete-suggestions" id="editHotelCity_suggestions"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHotelCountry">Country</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="editHotelCountry" name="hotel_country" autocomplete="off">
+                            <div class="autocomplete-suggestions" id="editHotelCountry_suggestions"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHotelNumber">Hotel Number</label>
+                        <input type="text" id="editHotelNumber" name="vehicle_train_flight_hotel_number" placeholder="Hotel confirmation number">
+                    </div>
+                </div>
+                
+                <!-- Transport/Flight-specific fields -->
+                <div id="editTransportFields" class="service-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="editOperatorName">Operator/Airline Name</label>
+                        <input type="text" id="editOperatorName" name="operator_name">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editFromJourney">From</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="editFromJourney" name="from_journey" autocomplete="off">
+                                <div class="autocomplete-suggestions" id="editFromJourney_suggestions"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFromCountry">From Country</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="editFromCountry" name="from_journey_country" autocomplete="off">
+                                <div class="autocomplete-suggestions" id="editFromCountry_suggestions"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editToJourney">To</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="editToJourney" name="to_journey" autocomplete="off">
+                                <div class="autocomplete-suggestions" id="editToJourney_suggestions"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editToCountry">To Country</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="editToCountry" name="to_journey_country" autocomplete="off">
+                                <div class="autocomplete-suggestions" id="editToCountry_suggestions"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editVehicleNumber">Vehicle/Train/Flight Number</label>
+                        <input type="text" id="editVehicleNumber" name="vehicle_train_flight_hotel_number" placeholder="e.g., MH12AB1234, 12345, AI123">
+                    </div>
+                </div>
+                
+                <!-- Service Date and Time -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editServiceDate">Service Date</label>
+                        <input type="date" id="editServiceDate" name="service_date">
+                    </div>
+                    <div class="form-group">
+                        <label for="editServiceTime">Service Time</label>
+                        <input type="time" id="editServiceTime" name="service_time">
+                    </div>
+                </div>
+                
+                <!-- Single Customer Amount and Seat/Room (only for non-group bookings) -->
+                <div id="editSingleAmountFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editBaseAmount">Base Amount (₹) *</label>
+                            <input type="number" id="editBaseAmount" name="base_amount" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editSeatRoomNumber">Seat/Room Number</label>
+                            <input type="text" id="editSeatRoomNumber" name="seat_room_number" placeholder="e.g., A1, Room 101">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Group Customers Section -->
+                <div id="editGroupCustomersSection" style="display: none;">
+                    <div class="customers-header">
+                        <h3>👥 Customers</h3>
+                        <button type="button" onclick="addEditCustomer()" class="btn-primary btn-sm">
+                            <span>➕ Add Customer</span>
+                        </button>
+                    </div>
+                    <div id="editCustomersList" class="customers-list">
+                        <!-- Dynamic customers will be added here -->
+                    </div>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Booking History</h1>
+            <p>Search and manage your travel bookings</p>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="nav-btn">🆕 New Booking</a>
+            <a href="/export_bookings" class="nav-btn">📊 Export CSV</a>
+        </div>
+
+        <div class="search-section">
+            <div class="search-row">
+                <div class="search-group">
+                    <label for="searchQuery">🔍 Search</label>
+                    <input type="text" id="searchQuery" placeholder="Search by name, email, phone, hotel, operator, route...">
+                </div>
+                <div class="search-group">
+                    <label for="bookingType">🎯 Booking Type</label>
+                    <select id="bookingType">
+                        <option value="">All Types</option>
+                        <option value="Hotel">🏨 Hotel</option>
+                        <option value="Flight">✈️ Flight</option>
+                        <option value="Train">🚆 Train</option>
+                        <option value="Bus">🚌 Bus</option>
+                        <option value="Transport">🚐 Transport</option>
+                    </select>
+                </div>
+                <div class="search-group" style="max-width: 150px;">
+                    <label for="perPage">📄 Results per page</label>
+                    <select id="perPage" onchange="searchBookings(1)">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <button onclick="searchBookings(1)" class="search-btn">Search</button>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">Loading bookings...</div>
+            </div>
+            
+            <div id="paginationTop" class="pagination-container" style="display: none;">
+                <!-- Pagination controls will be inserted here -->
+            </div>
+            
+            <div id="bulkActions" class="bulk-actions">
+                <div class="bulk-actions-info">
+                    <span id="selectedCount">0</span> booking(s) selected
+                </div>
+                <div class="bulk-actions-buttons">
+                    <button onclick="bulkDeleteBookings()" class="bulk-btn bulk-delete-btn">🗑️ Delete Selected</button>
+                    <button onclick="clearSelection()" class="bulk-btn bulk-cancel-btn">✖️ Clear Selection</button>
+                </div>
+            </div>
+            
+            <div class="select-all-container">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                <label for="selectAll" style="cursor: pointer; user-select: none;">Select all on this page</label>
+            </div>
+            
+            <div id="bookingsContainer">
+                <div class="loading">
+                    <h3>🔄 Loading bookings...</h3>
+                    <p>Please wait while we fetch your booking history.</p>
+                </div>
+            </div>
+            
+            <div id="paginationBottom" class="pagination-container" style="display: none;">
+                <!-- Pagination controls will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentPagination = null;
+        let selectedBookings = new Set();
+
+        // Load bookings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            searchBookings(1);
+        });
+
+        // Search functionality with pagination
+        function searchBookings(page = 1) {
+            const query = document.getElementById('searchQuery').value;
+            const type = document.getElementById('bookingType').value;
+            const perPage = document.getElementById('perPage').value;
+            
+            currentPage = page;
+            
+            // Clear selections when searching
+            clearSelection();
+            
+            const params = new URLSearchParams();
+            if (query) params.append('q', query);
+            if (type) params.append('type', type);
+            params.append('page', page);
+            params.append('per_page', perPage);
+            
+            // Show loading state
+            document.getElementById('bookingsContainer').innerHTML = `
+                <div class="loading">
+                    <h3>🔄 Loading bookings...</h3>
+                    <p>Please wait while we fetch your booking history.</p>
+                </div>
+            `;
+            
+            fetch(`/api/search_bookings?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    currentPagination = data.pagination;
+                    displayBookings(data.bookings);
+                    updateResultsCount(data.pagination);
+                    updatePaginationControls(data.pagination);
+                })
+                .catch(error => {
+                    console.error('Error searching bookings:', error);
+                    showNotification('❌ Failed to load bookings. Please try again.', 'error');
+                    document.getElementById('bookingsContainer').innerHTML = 
+                        '<div class="no-results"><h3>❌ Error</h3><p>Failed to load bookings. Please try again.</p></div>';
+                    hidePaginationControls();
+                });
+        }
+
+        // Display bookings with delete functionality
+        function displayBookings(bookings) {
+            const container = document.getElementById('bookingsContainer');
+            
+            if (bookings.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <h3>📭 No bookings found</h3>
+                        <p>Try adjusting your search criteria or create a new booking.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            bookings.forEach(booking => {
+                const date = new Date(booking.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                let serviceDetails = '';
+                if (booking.booking_type === 'Hotel' && (booking.hotel_name || booking.hotel_city)) {
+                    serviceDetails = `
+                        <div class="detail-group">
+                            <h4>Hotel Details</h4>
+                            <p>${booking.hotel_name || 'N/A'} ${booking.hotel_city ? '• ' + booking.hotel_city : ''}</p>
+                            ${booking.vehicle_number ? `<p>Room: ${booking.vehicle_number}</p>` : ''}
+                        </div>
+                    `;
+                } else if (booking.booking_type !== 'Hotel' && (booking.operator_name || booking.from_journey || booking.to_journey)) {
+                    serviceDetails = `
+                        <div class="detail-group">
+                            <h4>Journey Details</h4>
+                            <p>${booking.operator_name || 'N/A'}</p>
+                            ${(booking.from_journey || booking.to_journey) ? 
+                                `<p>${booking.from_journey || 'N/A'} → ${booking.to_journey || 'N/A'}</p>` : ''}
+                            ${booking.vehicle_number ? `<p>Vehicle: ${booking.vehicle_number}</p>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Service timing details
+                let timingDetails = '';
+                if (booking.service_date || booking.service_time) {
+                    timingDetails = `
+                        <div class="detail-group">
+                            <h4>Service Timing</h4>
+                            ${booking.service_date ? `<p>📅 ${booking.service_date}</p>` : ''}
+                            ${booking.service_time ? `<p>🕐 ${booking.service_time}</p>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Customer details (different for group vs single)
+                let customerDetails = '';
+                if (booking.is_group_booking) {
+                    const displayNames = booking.customer_names.slice(0, 2);
+                    const remainingCount = booking.customer_count - displayNames.length;
+                    const namesList = displayNames.join(', ') + (remainingCount > 0 ? ` + ${remainingCount} more` : '');
+                    
+                    customerDetails = `
+                        <div class="detail-group">
+                            <h4>Group Booking (${booking.customer_count} customers)</h4>
+                            <p>${namesList}</p>
+                            <p>Contact: ${booking.email}</p>
+                            <p>${booking.phone}</p>
+                        </div>
+                    `;
+                } else {
+                    customerDetails = `
+                        <div class="detail-group">
+                            <h4>Customer</h4>
+                            <p>${booking.name}</p>
+                            <p>${booking.email}</p>
+                            <p>${booking.phone}</p>
+                        </div>
+                    `;
+                }
+
+                // Booking type display
+                const bookingTypeDisplay = booking.is_group_booking ? 
+                    `👥 ${booking.booking_type} (Group)` : 
+                    `${getBookingIcon(booking.booking_type)} ${booking.booking_type}`;
+
+                html += `
+                    <div class="booking-card" id="booking-${booking.id}">
+                        <input type="checkbox" class="booking-checkbox" data-booking-id="${booking.id}" 
+                               onchange="toggleBookingSelection(${booking.id})">
+                        <div class="booking-header">
+                            <div class="booking-id">#${String(booking.id).padStart(6, '0')}</div>
+                            <div class="booking-type ${booking.booking_type}">${bookingTypeDisplay}</div>
+                        </div>
+                        <div class="booking-details">
+                            ${customerDetails}
+                            ${serviceDetails}
+                            ${timingDetails}
+                            <div class="detail-group">
+                                <h4>Booking Date</h4>
+                                <p>${date}</p>
+                            </div>
+                            <div class="detail-group">
+                                <h4>Total Amount</h4>
+                                <p style="font-size: 1.2em; font-weight: bold; color: #28a745;">₹ ${booking.total ? parseFloat(booking.total).toFixed(2) : '0.00'}</p>
+                            </div>
+                        </div>
+                        <div class="booking-actions">
+                            <a href="/regenerate_invoice/${booking.id}" class="action-btn download-btn" target="_blank">
+                                📄 Download Invoice
+                            </a>
+                            <button onclick="editBooking(${booking.id})" class="action-btn edit-btn">
+                                ✏️ Edit
+                            </button>
+                            <button id="delete-btn-${booking.id}" 
+                                    onclick="deleteBooking(${booking.id}, '${booking.name.replace(/'/g, "\\'")}', this)" 
+                                    class="action-btn delete-btn">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Toggle individual booking selection
+        function toggleBookingSelection(bookingId) {
+            const checkbox = document.querySelector(`input[data-booking-id="${bookingId}"]`);
+            const card = document.getElementById(`booking-${bookingId}`);
+            
+            if (checkbox.checked) {
+                selectedBookings.add(bookingId);
+                card.classList.add('selected');
+            } else {
+                selectedBookings.delete(bookingId);
+                card.classList.remove('selected');
+            }
+            
+            updateBulkActions();
+            updateSelectAllCheckbox();
+        }
+
+        // Toggle select all on current page
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const bookingCheckboxes = document.querySelectorAll('.booking-checkbox');
+            
+            bookingCheckboxes.forEach(checkbox => {
+                const bookingId = parseInt(checkbox.dataset.bookingId);
+                checkbox.checked = selectAllCheckbox.checked;
+                
+                if (selectAllCheckbox.checked) {
+                    selectedBookings.add(bookingId);
+                    document.getElementById(`booking-${bookingId}`).classList.add('selected');
+                } else {
+                    selectedBookings.delete(bookingId);
+                    document.getElementById(`booking-${bookingId}`).classList.remove('selected');
+                }
+            });
+            
+            updateBulkActions();
+        }
+
+        // Update select all checkbox state
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const bookingCheckboxes = document.querySelectorAll('.booking-checkbox');
+            const checkedCheckboxes = document.querySelectorAll('.booking-checkbox:checked');
+            
+            if (checkedCheckboxes.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedCheckboxes.length === bookingCheckboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+                selectAllCheckbox.checked = false;
+            }
+        }
+
+        // Update bulk actions visibility
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = selectedBookings.size;
+            
+            if (selectedBookings.size > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        // Clear all selections
+        function clearSelection() {
+            const previousCount = selectedBookings.size;
+            selectedBookings.clear();
+            document.querySelectorAll('.booking-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.querySelectorAll('.booking-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('selectAll').checked = false;
+            document.getElementById('selectAll').indeterminate = false;
+            updateBulkActions();
+            
+            if (previousCount > 0) {
+                showNotification(`✅ Cleared selection of ${previousCount} booking(s)`, 'success', 2000);
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success', duration = 5000) {
+            // Get or create notification container
+            let container = document.getElementById('notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notification-container';
+                container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;';
+                document.body.appendChild(container);
+            }
+
+            // Remove any existing notifications of the same type
+            const existingNotifications = container.querySelectorAll('.notification');
+            existingNotifications.forEach(n => n.remove());
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            // Add to container
+            container.appendChild(notification);
+
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            // Auto-remove after duration
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+
+        // Delete single booking with enhanced confirmation and notifications
+        function deleteBooking(bookingId, customerName, buttonElement) {
+            // First confirmation
+            const firstConfirm = confirm(`⚠️ DELETE BOOKING WARNING ⚠️\n\nYou are about to delete:\nBooking #${String(bookingId).padStart(6, '0')} for ${customerName}\n\nThis will:\n• Remove the booking from the database\n• Delete the associated invoice file\n• This action CANNOT be undone\n\nAre you sure you want to continue?`);
+            
+            if (!firstConfirm) {
+                return;
+            }
+
+            // Second confirmation for extra safety
+            const secondConfirm = confirm(`🚨 FINAL CONFIRMATION 🚨\n\nLast chance to cancel!\n\nClick OK to permanently delete booking #${String(bookingId).padStart(6, '0')}\nClick Cancel to keep the booking`);
+            
+            if (!secondConfirm) {
+                return;
+            }
+
+            // Disable the delete button temporarily
+            const deleteBtn = buttonElement;
+            const originalText = deleteBtn.textContent;
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = '⏳ Deleting...';
+
+            fetch(`/delete_booking/${bookingId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`✅ ${data.message}`, 'success');
+                    // Remove from selected bookings if it was selected
+                    selectedBookings.delete(bookingId);
+                    updateBulkActions();
+                    // Refresh current page after a short delay
+                    setTimeout(() => searchBookings(currentPage), 1000);
+                } else {
+                    showNotification(`❌ Error: ${data.message}`, 'error');
+                    // Re-enable button on error
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting booking:', error);
+                showNotification('❌ Error deleting booking. Please try again.', 'error');
+                // Re-enable button on error
+                deleteBtn.disabled = false;
+                deleteBtn.textContent = originalText;
+            });
+        }
+
+        // Bulk delete bookings with enhanced confirmation and notifications
+        function bulkDeleteBookings() {
+            if (selectedBookings.size === 0) {
+                showNotification('Please select at least one booking to delete.', 'warning');
+                return;
+            }
+
+            // First confirmation
+            const firstConfirm = confirm(`⚠️ BULK DELETE WARNING ⚠️\n\nYou are about to delete ${selectedBookings.size} booking(s)\n\nThis will:\n• Remove all selected bookings from the database\n• Delete associated invoice files\n• This action CANNOT be undone\n\nAre you sure you want to continue?`);
+            
+            if (!firstConfirm) {
+                return;
+            }
+
+            // Second confirmation for bulk operations
+            const secondConfirm = confirm(`🚨 FINAL CONFIRMATION 🚨\n\nLast chance to cancel!\n\nClick OK to permanently delete ${selectedBookings.size} booking(s)\nClick Cancel to keep all bookings`);
+            
+            if (!secondConfirm) {
+                return;
+            }
+
+            // Disable bulk delete button
+            const bulkDeleteBtn = document.querySelector('.bulk-delete-btn');
+            const originalText = bulkDeleteBtn.textContent;
+            bulkDeleteBtn.disabled = true;
+            bulkDeleteBtn.textContent = '⏳ Deleting...';
+
+            fetch('/bulk_delete_bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    booking_ids: Array.from(selectedBookings)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`✅ ${data.message}`, 'success');
+                    clearSelection();
+                    // Refresh current page after a short delay
+                    setTimeout(() => searchBookings(currentPage), 1000);
+                } else {
+                    showNotification(`❌ Error: ${data.message}`, 'error');
+                }
+                // Re-enable button
+                bulkDeleteBtn.disabled = false;
+                bulkDeleteBtn.textContent = originalText;
+            })
+            .catch(error => {
+                console.error('Error during bulk delete:', error);
+                showNotification('❌ Error deleting bookings. Please try again.', 'error');
+                // Re-enable button
+                bulkDeleteBtn.disabled = false;
+                bulkDeleteBtn.textContent = originalText;
+            });
+        }
+
+        // ...existing code...
+
+        // Update pagination controls
+        function updatePaginationControls(pagination) {
+            if (!pagination) {
+                console.error('No pagination data provided');
+                hidePaginationControls();
+                return;
+            }
+            
+            console.log('Updating pagination controls with:', pagination);
+            const paginationHTML = generatePaginationHTML(pagination);
+            
+            const topElement = document.getElementById('paginationTop');
+            const bottomElement = document.getElementById('paginationBottom');
+            
+            if (topElement) {
+                topElement.innerHTML = paginationHTML;
+            }
+            if (bottomElement) {
+                bottomElement.innerHTML = paginationHTML;
+            }
+            
+            // Show pagination if there are multiple pages
+            if (pagination.total_pages > 1) {
+                if (topElement) topElement.style.display = 'flex';
+                if (bottomElement) bottomElement.style.display = 'flex';
+            } else {
+                hidePaginationControls();
+            }
+        }
+
+        // Generate pagination HTML
+        function generatePaginationHTML(pagination) {
+            console.log('Generating pagination HTML for:', pagination); // Debug log
+            const startRecord = (pagination.page - 1) * pagination.per_page + 1;
+            const endRecord = Math.min(pagination.page * pagination.per_page, pagination.total);
+            
+            let html = `
+                <div class="pagination-info">
+                    Showing ${startRecord}-${endRecord} of ${pagination.total} bookings
+                </div>
+                <div class="pagination-controls">
+            `;
+            
+            // Previous button
+            const prevDisabled = !pagination.has_prev;
+            const prevPage = pagination.page - 1;
+            html += `
+                <button class="pagination-btn ${prevDisabled ? 'disabled' : ''}" 
+                        ${prevDisabled ? 'disabled' : ''}
+                        onclick="${prevDisabled ? '' : `goToPage(${prevPage})`}">
+                    ← Previous
+                </button>
+            `;
+            
+            // Page numbers
+            const startPage = Math.max(1, pagination.page - 2);
+            const endPage = Math.min(pagination.total_pages, pagination.page + 2);
+            
+            if (startPage > 1) {
+                html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === pagination.page;
+                html += `
+                    <button class="pagination-btn ${isActive ? 'active' : ''}" 
+                            ${isActive ? 'disabled' : ''}
+                            onclick="${isActive ? '' : `goToPage(${i})`}">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (endPage < pagination.total_pages) {
+                if (endPage < pagination.total_pages - 1) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+                html += `<button class="pagination-btn" onclick="goToPage(${pagination.total_pages})">${pagination.total_pages}</button>`;
+            }
+            
+            // Next button
+            const nextDisabled = !pagination.has_next;
+            const nextPage = pagination.page + 1;
+            html += `
+                <button class="pagination-btn ${nextDisabled ? 'disabled' : ''}" 
+                        ${nextDisabled ? 'disabled' : ''}
+                        onclick="${nextDisabled ? '' : `goToPage(${nextPage})`}">
+                    Next →
+                </button>
+            `;
+            
+            html += '</div>';
+            console.log('Generated pagination HTML:', html); // Debug log
+            return html;
+        }
+
+        // Hide pagination controls
+        function hidePaginationControls() {
+            const topElement = document.getElementById('paginationTop');
+            const bottomElement = document.getElementById('paginationBottom');
+            
+            if (topElement) topElement.style.display = 'none';
+            if (bottomElement) bottomElement.style.display = 'none';
+        }
+
+        // Helper function for pagination navigation
+        function goToPage(page) {
+            if (page < 1) {
+                console.warn('Invalid page number:', page);
+                return;
+            }
+            
+            if (currentPagination && page > currentPagination.total_pages) {
+                console.warn('Page number exceeds total pages:', page, 'max:', currentPagination.total_pages);
+                return;
+            }
+            
+            console.log('Navigating to page:', page);
+            searchBookings(page);
+        }
+
+        // Get booking type icon
+        function getBookingIcon(type) {
+            const icons = {
+                'Hotel': '🏨',
+                'Flight': '✈️',
+                'Train': '🚆',
+                'Bus': '🚌'
+            };
+            return icons[type] || '📋';
+        }
+
+        // Update results count
+        function updateResultsCount(pagination) {
+            const countElement = document.getElementById('resultsCount');
+            countElement.textContent = `Found ${pagination.total} booking${pagination.total !== 1 ? 's' : ''}`;
+        }
+
+        // Enter key support for search
+        document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchBookings(1);
+            }
+        });
+
+        // Auto-search when filters change
+        document.getElementById('bookingType').addEventListener('change', function() {
+            searchBookings(1);
+        });
+
+        document.getElementById('perPage').addEventListener('change', function() {
+            searchBookings(1);
+        });
+
+        // Edit Booking Functions
+        let editCustomerCount = 0;
+        let originalCustomerCount = 0;
+        let hasCustomerChanges = false;
+        
+        // Track customer changes
+        function trackCustomerChange(action, customerName = '') {
+            hasCustomerChanges = true;
+            console.log(`Customer change tracked: ${action} - ${customerName}`);
+        }
+
+        function resetCustomerTracking() {
+            hasCustomerChanges = false;
+            originalCustomerCount = 0;
+            editCustomerCount = 0;
+            console.log('Customer tracking reset');
+        }
+        
+        function editBooking(bookingId) {
+            // Fetch booking details
+            fetch(`/get_booking/${bookingId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateEditForm(data.booking);
+                        
+                        // Show modal
+                        const modal = document.getElementById('editModal');
+                        if (modal) {
+                            modal.style.display = 'block';
+                        }
+                        
+                        // Debug: Log toggle element
+                        const toggle = document.getElementById('editGroupBookingToggle');
+                        console.log('Toggle element:', toggle);
+                        
+                        // Ensure toggle is visible
+                        setTimeout(() => {
+                            const toggleLabel = document.querySelector('.toggle-label');
+                            if (toggleLabel) {
+                                toggleLabel.style.display = 'flex';
+                                toggleLabel.style.visibility = 'visible';
+                            }
+                        }, 100);
+                        
+                    } else {
+                        showNotification(`❌ Error: ${data.message}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching booking:', error);
+                    showNotification('❌ Failed to load booking details', 'error');
+                });
+        }
+
+        function populateEditForm(booking) {
+            try {
+                // Reset form and customer tracking
+                document.getElementById('editBookingForm').reset();
+                resetCustomerTracking();
+                
+                // Basic booking details
+                document.getElementById('editBookingId').value = booking.id;
+                
+                // Safely populate fields with null checks
+                const setFieldValue = (id, value) => {
+                    const field = document.getElementById(id);
+                    if (field) field.value = value || '';
+                };
+                
+                setFieldValue('editName', booking.name);
+                setFieldValue('editEmail', booking.email);
+                setFieldValue('editPhone', booking.phone);
+                setFieldValue('editBookingType', booking.booking_type);
+                setFieldValue('editBaseAmount', booking.base_amount);
+                
+                // Service-specific fields
+                setFieldValue('editHotelName', booking.hotel_name);
+                setFieldValue('editHotelCity', booking.hotel_city);
+                setFieldValue('editHotelCountry', booking.hotel_country);
+                setFieldValue('editOperatorName', booking.operator_name);
+                setFieldValue('editFromJourney', booking.from_journey);
+                setFieldValue('editFromCountry', booking.from_journey_country);
+                setFieldValue('editToJourney', booking.to_journey);
+                setFieldValue('editToCountry', booking.to_journey_country);
+                
+                // Set vehicle/hotel number based on booking type
+                const vehicleNumber = booking.vehicle_number || '';
+                setFieldValue('editHotelNumber', vehicleNumber);
+                setFieldValue('editVehicleNumber', vehicleNumber);
+                
+                // Date and time fields
+                setFieldValue('editServiceDate', booking.service_date);
+                setFieldValue('editServiceTime', booking.service_time);
+                setFieldValue('editSeatRoomNumber', booking.seat_room_number);
+                
+                // Handle group booking
+                const isGroupBooking = booking.is_group_booking || (booking.customers && booking.customers.length > 0);
+                const groupToggle = document.getElementById('editGroupBookingToggle');
+                if (groupToggle) groupToggle.checked = isGroupBooking;
+                
+                if (isGroupBooking) {
+                    // Load group booking data
+                    toggleEditGroupBooking();
+                    const customersList = document.getElementById('editCustomersList');
+                    if (customersList) customersList.innerHTML = '';
+                    
+                    if (booking.customers && booking.customers.length > 0) {
+                        originalCustomerCount = booking.customers.length;
+                        booking.customers.forEach(customer => {
+                            addEditCustomerRow(customer);
+                        });
+                    } else {
+                        originalCustomerCount = 1;
+                        // Add at least one empty customer for editing
+                        addEditCustomer();
+                    }
+                    
+                    // Renumber all customers to ensure proper indexing
+                    setTimeout(() => {
+                        renumberEditCustomers();
+                        // Toggle service fields after DOM update
+                        toggleEditServiceFields();
+                    }, 100);
+                } else {
+                    // Single booking mode
+                    originalCustomerCount = 0; // Single bookings don't have multiple customers
+                    toggleEditGroupBooking();
+                    // Toggle service fields after DOM update
+                    setTimeout(() => toggleEditServiceFields(), 50);
+                }
+                
+            } catch (error) {
+                console.error('Error populating edit form:', error);
+                showNotification('❌ Error loading booking data', 'error');
+            }
+        }
+
+        function toggleEditGroupBooking() {
+            try {
+                const groupToggle = document.getElementById('editGroupBookingToggle');
+                const isGroup = groupToggle ? groupToggle.checked : false;
+                
+                const singleFields = document.getElementById('editSingleCustomerFields');
+                const singleAmountFields = document.getElementById('editSingleAmountFields');
+                const groupSection = document.getElementById('editGroupCustomersSection');
+                
+                if (isGroup) {
+                    if (singleFields) singleFields.style.display = 'none';
+                    if (singleAmountFields) singleAmountFields.style.display = 'none';
+                    if (groupSection) groupSection.style.display = 'block';
+                    
+                    // Remove required attributes from single customer fields
+                    const removeRequired = (id) => {
+                        const field = document.getElementById(id);
+                        if (field) field.removeAttribute('required');
+                    };
+                    
+                    removeRequired('editName');
+                    removeRequired('editEmail');
+                    removeRequired('editPhone');
+                    removeRequired('editBaseAmount');
+                    
+                    // Ensure at least one customer exists
+                    const customersList = document.getElementById('editCustomersList');
+                    if (customersList && customersList.children.length === 0) {
+                        addEditCustomer();
+                    }
+                    
+                    showNotification('📋 Switched to group booking mode', 'info');
+                } else {
+                    if (singleFields) singleFields.style.display = 'block';
+                    if (singleAmountFields) singleAmountFields.style.display = 'block';
+                    if (groupSection) groupSection.style.display = 'none';
+                    
+                    // Add back required attributes
+                    const addRequired = (id) => {
+                        const field = document.getElementById(id);
+                        if (field) field.setAttribute('required', '');
+                    };
+                    
+                    addRequired('editName');
+                    addRequired('editEmail');
+                    addRequired('editPhone');
+                    addRequired('editBaseAmount');
+                    
+                    showNotification('👤 Switched to single booking mode', 'info');
+                }
+            } catch (error) {
+                console.error('Error toggling group booking mode:', error);
+                showNotification('❌ Error switching booking mode', 'error');
+            }
+        }
+
+        function addEditCustomer() {
+            addEditCustomerRow();
+        }
+
+        function addEditCustomerRow(customer = null) {
+            editCustomerCount++;
+            const customerNumber = editCustomerCount;
+            const customersList = document.getElementById('editCustomersList');
+            
+            if (!customersList) {
+                console.error('Customer list element not found');
+                showNotification('❌ Error adding customer', 'error');
+                return;
+            }
+            
+            const customerDiv = document.createElement('div');
+            customerDiv.className = 'customer-entry';
+            customerDiv.id = `editCustomer${customerNumber}`;
+            
+            // Use data attribute to store customer number for easier tracking
+            customerDiv.setAttribute('data-customer-id', customerNumber);
+            
+            customerDiv.innerHTML = `
+                <div class="customer-header">
+                    <span class="customer-number">Customer ${customerNumber}</span>
+                    <button type="button" class="btn-remove" aria-label="Remove Customer">✕</button>
+                </div>
+                <div class="customer-fields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name *</label>
+                            <input type="text" name="customer_name_${customerNumber}" value="${customer ? (customer.customer_name || '') : ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="customer_email_${customerNumber}" value="${customer ? (customer.customer_email || '') : ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="customer_phone_${customerNumber}" value="${customer ? (customer.customer_phone || '') : ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Seat/Room</label>
+                            <input type="text" name="customer_seat_${customerNumber}" value="${customer ? (customer.seat_room_number || '') : ''}" placeholder="e.g., A1, Room 101">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (₹) *</label>
+                            <input type="number" name="customer_amount_${customerNumber}" value="${customer ? (customer.customer_amount || '') : ''}" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            customersList.appendChild(customerDiv);
+            
+            // Add event listener to remove button with the correct customer number
+            const removeBtn = customerDiv.querySelector('.btn-remove');
+            if (removeBtn) {
+                // Use closure to capture the correct customer number
+                removeBtn.onclick = (function(custNum) {
+                    return function() {
+                        removeEditCustomer(custNum);
+                    };
+                })(customerNumber);
+            }
+            
+            if (customer) {
+                console.log(`Customer "${customer.customer_name || 'Unnamed'}" loaded as Customer ${customerNumber}`);
+            } else {
+                trackCustomerChange('added', `Customer ${customerNumber}`);
+                showNotification(`➕ Customer ${customerNumber} added`, 'success');
+            }
+        }
+
+        function removeEditCustomer(customerNumber) {
+            try {
+                // Find the customer by either ID or data-customer-id attribute
+                let customerDiv = document.getElementById(`editCustomer${customerNumber}`);
+                
+                // If not found by ID, find by data-customer-id
+                if (!customerDiv) {
+                    customerDiv = document.querySelector(`[data-customer-id="${customerNumber}"]`);
+                }
+                
+                // If still not found, try to find by position in the list
+                if (!customerDiv) {
+                    const customerEntries = document.querySelectorAll('#editCustomersList .customer-entry');
+                    if (customerNumber <= customerEntries.length) {
+                        customerDiv = customerEntries[customerNumber - 1];
+                    }
+                }
+                
+                if (!customerDiv) {
+                    console.error(`Customer ${customerNumber} not found`);
+                    showNotification('❌ Customer not found', 'error');
+                    return;
+                }
+                
+                const customersList = document.getElementById('editCustomersList');
+                if (!customersList) {
+                    console.error('Customer list not found');
+                    return;
+                }
+                
+                // Check if this is the last customer in group booking mode
+                const remainingCustomers = customersList.querySelectorAll('.customer-entry');
+                if (remainingCustomers.length <= 1) {
+                    showNotification('⚠️ Group booking must have at least one customer', 'warning');
+                    return;
+                }
+                
+                // Get customer name for notification
+                const nameInput = customerDiv.querySelector('input[name*="customer_name_"]');
+                const customerName = nameInput ? nameInput.value.trim() : '';
+                
+                // Remove the customer
+                customerDiv.remove();
+                const displayName = customerName || `Customer ${customerNumber}`;
+                trackCustomerChange('removed', displayName);
+                showNotification(`🗑️ ${displayName} removed`, 'warning');
+                
+                // Renumber remaining customers to maintain sequential numbering
+                renumberEditCustomers();
+                
+            } catch (error) {
+                console.error('Error removing customer:', error);
+                showNotification('❌ Error removing customer', 'error');
+            }
+        }
+
+        function renumberEditCustomers() {
+            try {
+                const customerEntries = document.querySelectorAll('#editCustomersList .customer-entry');
+                
+                customerEntries.forEach((entry, index) => {
+                    const newNumber = index + 1;
+                    
+                    // Update ID
+                    entry.id = `editCustomer${newNumber}`;
+                    entry.setAttribute('data-customer-id', newNumber);
+                    
+                    // Update header
+                    const header = entry.querySelector('.customer-number');
+                    if (header) header.textContent = `Customer ${newNumber}`;
+                    
+                    // Update remove button with correct customer number
+                    const removeBtn = entry.querySelector('.btn-remove');
+                    if (removeBtn) {
+                        // Remove any existing event handlers
+                        removeBtn.removeAttribute('onclick');
+                        // Create a new event handler with the correct number
+                        removeBtn.onclick = (function(customerNum) {
+                            return function() {
+                                removeEditCustomer(customerNum);
+                            };
+                        })(newNumber);
+                    }
+                    
+                    // Update input names with the correct index
+                    const inputs = entry.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        const name = input.name;
+                        if (name) {
+                            // Replace the old number with the new number in the input name
+                            if (name.includes('customer_name_')) {
+                                input.name = `customer_name_${newNumber}`;
+                            } else if (name.includes('customer_email_')) {
+                                input.name = `customer_email_${newNumber}`;
+                            } else if (name.includes('customer_phone_')) {
+                                input.name = `customer_phone_${newNumber}`;
+                            } else if (name.includes('customer_seat_')) {
+                                input.name = `customer_seat_${newNumber}`;
+                            } else if (name.includes('customer_amount_')) {
+                                input.name = `customer_amount_${newNumber}`;
+                            }
+                        }
+                    });
+                });
+                
+                // Update global counter to match the actual number of customers
+                editCustomerCount = customerEntries.length;
+                
+                // Show feedback only if there are customers
+                if (customerEntries.length > 0) {
+                    console.log(`Customer numbers updated: ${customerEntries.length} customers`);
+                }
+                
+            } catch (error) {
+                console.error('Error renumbering customers:', error);
+                showNotification('❌ Error updating customer numbers', 'error');
+            }
+        }
+
+        function toggleEditServiceFields() {
+            const bookingType = document.getElementById('editBookingType').value;
+            const hotelFields = document.getElementById('editHotelFields');
+            const transportFields = document.getElementById('editTransportFields');
+            
+            if (bookingType === 'Hotel') {
+                hotelFields.style.display = 'block';
+                transportFields.style.display = 'none';
+            } else if (bookingType === 'Bus' || bookingType === 'Train' || bookingType === 'Flight' || bookingType === 'Transport') {
+                hotelFields.style.display = 'none';
+                transportFields.style.display = 'block';
+            } else {
+                hotelFields.style.display = 'none';
+                transportFields.style.display = 'none';
+            }
+        }
+
+        function closeEditModal() {
+            try {
+                const modal = document.getElementById('editModal');
+                const form = document.getElementById('editBookingForm');
+                const customersList = document.getElementById('editCustomersList');
+                
+                if (modal) modal.style.display = 'none';
+                if (form) form.reset();
+                if (customersList) customersList.innerHTML = '';
+                
+                // Reset all tracking
+                resetCustomerTracking();
+                
+                // Reset any validation states
+                const groupToggle = document.getElementById('editGroupBookingToggle');
+                if (groupToggle) groupToggle.checked = false;
+                
+                // Show single customer fields by default
+                const singleFields = document.getElementById('editSingleCustomerFields');
+                const singleAmountFields = document.getElementById('editSingleAmountFields');
+                const groupSection = document.getElementById('editGroupCustomersSection');
+                
+                if (singleFields) singleFields.style.display = 'block';
+                if (singleAmountFields) singleAmountFields.style.display = 'block';
+                if (groupSection) groupSection.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error closing edit modal:', error);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        }
+
+        // Helper function to collect customer data
+        function collectCustomerData() {
+            const customers = [];
+            const customerEntries = document.querySelectorAll('#editCustomersList .customer-entry');
+            let hasValidCustomer = false;
+            let invalidCustomers = [];
+            
+            customerEntries.forEach((entry, index) => {
+                // Get the current customer number from the display (after renumbering)
+                const customerNum = index + 1; // Always use sequential numbering after renumbering
+                
+                // Get inputs more reliably
+                const nameInput = entry.querySelector('input[name*="customer_name_"]');
+                const emailInput = entry.querySelector('input[name*="customer_email_"]');
+                const phoneInput = entry.querySelector('input[name*="customer_phone_"]');
+                const seatInput = entry.querySelector('input[name*="customer_seat_"]');
+                const amountInput = entry.querySelector('input[name*="customer_amount_"]');
+                
+                const name = nameInput ? nameInput.value.trim() : '';
+                const amount = amountInput ? parseFloat(amountInput.value) || 0 : 0;
+                
+                // Check if this customer has valid data
+                if (name && amount > 0) {
+                    hasValidCustomer = true;
+                    customers.push({
+                        customer_name: name,
+                        customer_email: emailInput ? emailInput.value.trim() : '',
+                        customer_phone: phoneInput ? phoneInput.value.trim() : '',
+                        seat_room_number: seatInput ? seatInput.value.trim() : '',
+                        customer_amount: amount
+                    });
+                } else {
+                    // Track invalid customers for better error messages using current numbering
+                    const issues = [];
+                    if (!name) issues.push('name is missing');
+                    if (amount <= 0) issues.push('amount is missing or invalid');
+                    invalidCustomers.push(`Customer ${customerNum}: ${issues.join(' and ')}`);
+                }
+            });
+            
+            return { customers, hasValidCustomer, invalidCustomers };
+        }
+        
+        // Helper function to confirm customer changes
+        function confirmCustomerChanges() {
+            if (!hasCustomerChanges) return true;
+            
+            const currentCustomerCount = document.querySelectorAll('#editCustomersList .customer-entry').length;
+            let changeMessage = '';
+            
+            if (currentCustomerCount !== originalCustomerCount) {
+                const diff = currentCustomerCount - originalCustomerCount;
+                if (diff > 0) {
+                    changeMessage = `⚠️ You have added ${diff} customer(s) to this booking.`;
+                } else {
+                    changeMessage = `⚠️ You have removed ${Math.abs(diff)} customer(s) from this booking.`;
+                }
+            } else {
+                changeMessage = '⚠️ You have made changes to customer information.';
+            }
+            
+            return confirm(`${changeMessage}\n\n🔄 Do you want to proceed with updating the booking?\n\nThis will save all your changes.`);
+        }
+        
+        // Handle edit form submission
+        document.getElementById('editBookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const bookingId = document.getElementById('editBookingId').value;
+            const isGroupBooking = document.getElementById('editGroupBookingToggle').checked;
+            
+            // Check for customer changes and ask for confirmation
+            if (isGroupBooking && !confirmCustomerChanges()) {
+                return;
+            }
+            
+            // Prepare form data
+            const data = {
+                is_group_booking: isGroupBooking
+            };
+            
+            if (isGroupBooking) {
+                // Collect customers data with improved logic
+                const customerEntries = document.querySelectorAll('#editCustomersList .customer-entry');
+                
+                if (customerEntries.length === 0) {
+                    showNotification('❌ Please add at least one customer for group booking', 'error');
+                    return;
+                }
+                
+                const { customers, hasValidCustomer, invalidCustomers } = collectCustomerData();
+                
+                if (!hasValidCustomer) {
+                    const errorMsg = invalidCustomers.length > 0 
+                        ? `❌ Please provide valid data for:\n${invalidCustomers.join('\n')}`
+                        : '❌ Please provide valid name and amount for at least one customer';
+                    showNotification(errorMsg, 'error');
+                    return;
+                }
+                
+                // Show warning if some customers are invalid but at least one is valid
+                if (invalidCustomers.length > 0 && hasValidCustomer) {
+                    const continueWithPartial = confirm(`Some customers have incomplete data:\n${invalidCustomers.join('\n')}\n\nDo you want to continue with only the valid customers?`);
+                    if (!continueWithPartial) {
+                        return;
+                    }
+                }
+                
+                data.customers = customers;
+                
+                // For group booking, use a placeholder name/email/phone from first customer
+                if (customers.length > 0) {
+                    data.name = customers[0].customer_name;
+                    data.email = customers[0].customer_email || 'group@booking.com';
+                    data.phone = customers[0].customer_phone || '0000000000';
+                }
+                
+                // Don't include base_amount for group bookings
+                // The backend will calculate it from customer amounts
+            } else {
+                // Single booking - collect standard form data
+                const formData = new FormData(this);
+                for (let [key, value] of formData.entries()) {
+                    if (key !== 'booking_id' && !key.startsWith('customer_')) {
+                        data[key] = value;
+                    }
+                }
+                
+                // Ensure base_amount is included for single bookings
+                if (!data.base_amount) {
+                    data.base_amount = document.getElementById('editBaseAmount').value;
+                }
+            }
+            
+            // Add other form fields
+            data.booking_type = document.getElementById('editBookingType').value;
+            data.hotel_name = document.getElementById('editHotelName').value;
+            data.hotel_city = document.getElementById('editHotelCity').value;
+            data.hotel_country = document.getElementById('editHotelCountry').value;
+            data.operator_name = document.getElementById('editOperatorName').value;
+            data.from_journey = document.getElementById('editFromJourney').value;
+            data.from_journey_country = document.getElementById('editFromCountry').value;
+            data.to_journey = document.getElementById('editToJourney').value;
+            data.to_journey_country = document.getElementById('editToCountry').value;
+            data.service_date = document.getElementById('editServiceDate').value;
+            data.service_time = document.getElementById('editServiceTime').value;
+            
+            // Handle vehicle/hotel number based on booking type
+            if (data.booking_type === 'Hotel') {
+                data.vehicle_train_flight_hotel_number = document.getElementById('editHotelNumber').value;
+            } else if (data.booking_type === 'Transport' || data.booking_type === 'Flight') {
+                data.vehicle_train_flight_hotel_number = document.getElementById('editVehicleNumber').value;
+            }
+            
+            // For single bookings, add seat/room and base amount
+            if (!isGroupBooking) {
+                data.seat_room_number = document.getElementById('editSeatRoomNumber').value;
+                data.base_amount = document.getElementById('editBaseAmount').value;
+            }
+            
+            // Debug: Log the data being sent
+            console.log('Submitting edit data:', data);
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Updating...';
+            submitBtn.disabled = true;
+            
+            fetch(`/update_booking/${bookingId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`✅ ${data.message}`, 'success');
+                    closeEditModal();
+                    // Refresh current page after a short delay
+                    setTimeout(() => searchBookings(currentPage), 1000);
+                } else {
+                    showNotification(`❌ Error: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating booking:', error);
+                showNotification('❌ Failed to update booking', 'error');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Auto-complete functionality for edit form
+        class EditAutoComplete {
+            constructor(inputId, suggestionsId, apiEndpoint) {
+                this.inputId = inputId;
+                this.suggestionsId = suggestionsId;
+                this.apiEndpoint = apiEndpoint;
+                this.selectedIndex = -1;
+                this.debounceTimer = null;
+                
+                // Initialize when modal opens
+                this.initWhenAvailable();
+            }
+            
+            initWhenAvailable() {
+                const checkInput = () => {
+                    this.input = document.getElementById(this.inputId);
+                    this.suggestions = document.getElementById(this.suggestionsId);
+                    
+                    if (this.input && this.suggestions) {
+                        this.init();
+                    } else {
+                        setTimeout(checkInput, 100);
+                    }
+                };
+                checkInput();
+            }
+            
+            init() {
+                this.input.addEventListener('input', (e) => this.onInput(e));
+                this.input.addEventListener('keydown', (e) => this.onKeyDown(e));
+                this.input.addEventListener('focus', (e) => this.onFocus(e));
+                document.addEventListener('click', (e) => this.onDocumentClick(e));
+            }
+            
+            onInput(e) {
+                const query = e.target.value.trim();
+                
+                clearTimeout(this.debounceTimer);
+                
+                if (query.length < 2) {
+                    this.hideSuggestions();
+                    return;
+                }
+                
+                this.debounceTimer = setTimeout(() => {
+                    this.fetchSuggestions(query);
+                }, 300);
+            }
+            
+            onKeyDown(e) {
+                const suggestionItems = this.suggestions.querySelectorAll('.autocomplete-suggestion');
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.selectedIndex = Math.min(this.selectedIndex + 1, suggestionItems.length - 1);
+                        this.updateSelection(suggestionItems);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                        this.updateSelection(suggestionItems);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (this.selectedIndex >= 0 && suggestionItems[this.selectedIndex]) {
+                            this.selectSuggestion(suggestionItems[this.selectedIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        this.hideSuggestions();
+                        break;
+                }
+            }
+            
+            onFocus(e) {
+                if (e.target.value.trim().length >= 2) {
+                    this.fetchSuggestions(e.target.value.trim());
+                }
+            }
+            
+            onDocumentClick(e) {
+                if (this.input && this.suggestions && 
+                    !this.input.contains(e.target) && !this.suggestions.contains(e.target)) {
+                    this.hideSuggestions();
+                }
+            }
+            
+            async fetchSuggestions(query) {
+                try {
+                    const response = await fetch(`${this.apiEndpoint}?q=${encodeURIComponent(query)}&limit=6`);
+                    const data = await response.json();
+                    this.displaySuggestions(data.suggestions || []);
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                }
+            }
+            
+            displaySuggestions(suggestions) {
+                if (suggestions.length === 0) {
+                    this.hideSuggestions();
+                    return;
+                }
+                
+                const html = suggestions.map((suggestion, index) => {
+                    if (this.apiEndpoint.includes('/countries')) {
+                        // Country suggestions
+                        return `
+                            <div class="autocomplete-suggestion" data-value="${suggestion.name}" data-index="${index}">
+                                <div class="suggestion-main">${suggestion.name}</div>
+                                <div class="suggestion-detail">${suggestion.code}${suggestion.popular ? ' <span class="suggestion-type">Popular</span>' : ''}</div>
+                            </div>
+                        `;
+                    } else {
+                        // City suggestions
+                        return `
+                            <div class="autocomplete-suggestion" data-value="${suggestion.name}" data-index="${index}">
+                                <div class="suggestion-main">${suggestion.name}</div>
+                                <div class="suggestion-detail">${suggestion.region || suggestion.state || ''}, ${suggestion.country}${suggestion.type ? `<span class="suggestion-type">${suggestion.type}</span>` : ''}</div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+                
+                this.suggestions.innerHTML = html;
+                this.selectedIndex = -1;
+                this.showSuggestions();
+                
+                this.suggestions.querySelectorAll('.autocomplete-suggestion').forEach((item, index) => {
+                    item.addEventListener('click', () => this.selectSuggestion(item));
+                    item.addEventListener('mouseenter', () => {
+                        this.selectedIndex = index;
+                        this.updateSelection(this.suggestions.querySelectorAll('.autocomplete-suggestion'));
+                    });
+                });
+            }
+            
+            updateSelection(items) {
+                items.forEach((item, index) => {
+                    item.classList.toggle('selected', index === this.selectedIndex);
+                });
+            }
+            
+            selectSuggestion(item) {
+                this.input.value = item.dataset.value;
+                this.hideSuggestions();
+                this.input.focus();
+                this.input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            showSuggestions() {
+                this.suggestions.style.display = 'block';
+            }
+            
+            hideSuggestions() {
+                this.suggestions.style.display = 'none';
+                this.selectedIndex = -1;
+            }
+        }
+
+        // Initialize auto-complete for edit forms
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize auto-complete instances for cities and countries
+            new EditAutoComplete('editHotelCity', 'editHotelCity_suggestions', '/api/cities');
+            new EditAutoComplete('editHotelCountry', 'editHotelCountry_suggestions', '/api/countries');
+            new EditAutoComplete('editFromJourney', 'editFromJourney_suggestions', '/api/cities');
+            new EditAutoComplete('editFromCountry', 'editFromCountry_suggestions', '/api/countries');
+            new EditAutoComplete('editToJourney', 'editToJourney_suggestions', '/api/cities');
+            new EditAutoComplete('editToCountry', 'editToCountry_suggestions', '/api/countries');
+        });
+    </script>
+
+    <!-- External JavaScript Files -->
+    <script src="{{ url_for('static', filename='js/bookings.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/booking-display.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/selection.js') }}"></script>
+    <!-- pagination.js removed - functions are defined inline in this template -->
+    <script src="{{ url_for('static', filename='js/booking-actions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+
+</body>
+</html>

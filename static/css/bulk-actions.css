@@ -1,0 +1,60 @@
+/* Bulk Actions Styles */
+.bulk-actions {
+    display: none;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bulk-actions.active {
+    display: flex;
+}
+
+.bulk-actions-info {
+    color: #856404;
+    font-weight: 600;
+}
+
+.bulk-actions-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.bulk-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.bulk-delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.bulk-delete-btn:hover {
+    background: #c82333;
+}
+
+.bulk-cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.bulk-cancel-btn:hover {
+    background: #545b62;
+}
+
+.select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}

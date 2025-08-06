@@ -1,0 +1,19 @@
+<!-- GST Options -->
+<div class="form-group">
+    <label class="checkbox-container">
+        <input type="checkbox" id="apply_gst" name="apply_gst" checked onchange="updateTotal()">
+        <span class="checkmark"></span>
+        Apply GST (18%)
+    </label>
+    <div class="gst-info">
+        <div class="calculation-row">
+            <span>Base Amount: ₹<span id="base-display">0.00</span></span>
+        </div>
+        <div class="calculation-row" id="gst-row" style="color: #667eea;">
+            <span>GST (18%): ₹<span id="gst-display">0.00</span></span>
+        </div>
+        <div class="calculation-row" style="font-weight: bold; font-size: 1.1em; color: #333; border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px;">
+            <span>Total Amount: ₹<span id="final-total">0.00</span></span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+<!-- Transport Fields -->
+<div id="transport-fields" class="conditional-fields">
+    <h3 style="color: #667eea; margin-bottom: 15px;">🚀 Journey Information</h3>
+    <div class="form-group">
+        <label for="operator_name">Operator/Airline Name</label>
+        <input type="text" id="operator_name" name="operator_name" placeholder="Enter operator or airline name">
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <div class="autocomplete-container">
+                <label for="from_journey">From</label>
+                <input type="text" id="from_journey" name="from_journey" placeholder="Enter departure city" autocomplete="off">
+                <div id="from_journey_suggestions" class="autocomplete-suggestions"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="autocomplete-container">
+                <label for="from_country">From Country</label>
+                <input type="text" id="from_country" name="from_journey_country" placeholder="Select country" autocomplete="off">
+                <div id="from_country_suggestions" class="autocomplete-suggestions"></div>
+            </div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <div class="autocomplete-container">
+                <label for="to_journey">To</label>
+                <input type="text" id="to_journey" name="to_journey" placeholder="Enter destination city" autocomplete="off">
+                <div id="to_journey_suggestions" class="autocomplete-suggestions"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="autocomplete-container">
+                <label for="to_country">To Country</label>
+                <input type="text" id="to_country" name="to_journey_country" placeholder="Select country" autocomplete="off">
+                <div id="to_country_suggestions" class="autocomplete-suggestions"></div>
+            </div>
+        </div>
+    </div>
+</div>
