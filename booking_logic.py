@@ -32,7 +32,7 @@ def process_single_booking(form_data: Dict[str, Any]) -> Tuple[bool, str, Option
     
     # Extract and clean data
     name = form_data['name'].strip()
-    email = form_data['email'].strip()
+    email = form_data.get('email', '').strip() or None
     phone = form_data['phone'].strip()
     booking_type = form_data['booking_type']
     base_amount = float(form_data['base_amount'])

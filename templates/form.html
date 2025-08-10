@@ -143,10 +143,14 @@
 <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 
 <script>
+    // Configuration from server
+    window.GST_PERCENT = {{ gst_percent }};
+    
     // Initialize the form when page loads
     document.addEventListener('DOMContentLoaded', function() {
         initializeForm();
         console.log('Form initialized successfully');
+        console.log('GST Percentage configured:', window.GST_PERCENT + '%');
     });
 </script>
 

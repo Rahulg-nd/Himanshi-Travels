@@ -46,8 +46,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="editEmail">Email *</label>
-                        <input type="email" id="editEmail" name="email" required>
+                        <label for="editEmail">Email (Optional)</label>
+                        <input type="email" id="editEmail" name="email">
                     </div>
                     
                     <div class="form-group">
@@ -384,7 +384,7 @@
                         <div class="detail-group">
                             <h4>Group Booking (${booking.customer_count} customers)</h4>
                             <p>${namesList}</p>
-                            <p>Contact: ${booking.email}</p>
+                            <p>Contact: ${booking.email || 'No email provided'}</p>
                             <p>${booking.phone}</p>
                         </div>
                     `;
@@ -393,7 +393,7 @@
                         <div class="detail-group">
                             <h4>Customer</h4>
                             <p>${booking.name}</p>
-                            <p>${booking.email}</p>
+                            <p>${booking.email || 'No email provided'}</p>
                             <p>${booking.phone}</p>
                         </div>
                     `;

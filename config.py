@@ -6,7 +6,7 @@ Configuration settings for Himanshi Travels application
 DATABASE_FILE = 'db.sqlite3'
 
 # Business configuration
-GST_PERCENT = 18
+GST_PERCENT = 5
 AGENCY_NAME = "Himanshi Travels"
 AGENCY_TAGLINE = "Your Journey, Our Passion"
 GSTIN = "29ABCDE1234F2Z5"

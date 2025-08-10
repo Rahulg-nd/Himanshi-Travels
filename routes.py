@@ -8,7 +8,7 @@ import io
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, send_file, make_response, jsonify
 
-from config import DEFAULT_PAGE_SIZE
+from config import DEFAULT_PAGE_SIZE, GST_PERCENT
 from database import (init_db, get_booking_by_id, search_bookings, delete_booking, 
                      bulk_delete_bookings, get_all_bookings_for_export)
 from booking_logic import process_single_booking, process_group_booking, process_booking_update
@@ -51,7 +51,7 @@ def register_routes(app):
                     'message': message
                 }), 400
         
-        return render_template('form.html')
+        return render_template('form.html', gst_percent=GST_PERCENT)
 
     @app.route('/invoice/<int:booking_id>')
     def generate_invoice(booking_id):
@@ -76,7 +76,7 @@ def register_routes(app):
     @app.route('/bookings')
     def view_bookings():
         """Display all bookings with search functionality"""
-        return render_template('bookings.html')
+        return render_template('bookings.html', gst_percent=GST_PERCENT)
 
     @app.route('/api/search_bookings')
     def search_bookings_api():

@@ -118,7 +118,7 @@ function generateCustomerDetails(booking) {
             <div class="detail-group">
                 <h4>Group Booking (${booking.customer_count} customers)</h4>
                 <p>${namesList}</p>
-                <p>Contact: ${booking.email}</p>
+                <p>Contact: ${booking.email || 'No email provided'}</p>
                 <p>${booking.phone}</p>
             </div>
         `;
@@ -127,7 +127,7 @@ function generateCustomerDetails(booking) {
             <div class="detail-group">
                 <h4>Customer</h4>
                 <p>${booking.name}</p>
-                <p>${booking.email}</p>
+                <p>${booking.email || 'No email provided'}</p>
                 <p>${booking.phone}</p>
             </div>
         `;

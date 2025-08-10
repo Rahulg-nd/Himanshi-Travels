@@ -12,7 +12,7 @@ class BookingValidator:
     @staticmethod
     def validate_single_booking(form_data: Dict[str, Any]) -> Tuple[bool, str]:
         """Validate single customer booking data"""
-        required_fields = ['name', 'email', 'phone', 'booking_type', 'base_amount']
+        required_fields = ['name', 'phone', 'booking_type', 'base_amount']
         
         # Check required fields
         for field in required_fields:
@@ -27,8 +27,9 @@ class BookingValidator:
                 if not value or not str(value).strip():
                     return False, f'Missing required field: {field}'
         
-        # Validate email format
-        if not validate_email(str(form_data['email']).strip()):
+        # Validate email format if provided
+        email = form_data.get('email', '')
+        if email and not validate_email(str(email).strip()):
             return False, 'Please enter a valid email address'
         
         # Validate phone number
@@ -120,7 +121,7 @@ class PDFValidator:
     @staticmethod
     def validate_booking_for_pdf(booking: Dict[str, Any]) -> Tuple[bool, str]:
         """Validate booking data for PDF generation"""
-        required_fields = ['id', 'name', 'email', 'phone', 'booking_type', 'base_amount', 'gst', 'total', 'date']
+        required_fields = ['id', 'name', 'phone', 'booking_type', 'base_amount', 'gst', 'total', 'date']
         
         for field in required_fields:
             if field not in booking:

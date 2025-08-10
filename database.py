@@ -100,7 +100,7 @@ def create_booking(booking_data: Dict[str, Any]) -> int:
                     service_date, service_time, is_group_booking, customer_address, apply_gst, 
                     hotel_country, from_journey_country, to_journey_country)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                    (booking_data['name'], booking_data['email'], booking_data['phone'], 
+                    (booking_data['name'], booking_data.get('email') or None, booking_data['phone'], 
                      booking_data['booking_type'], booking_data['base_amount'], booking_data['gst'], 
                      booking_data['total'], booking_data['date'], booking_data.get('hotel_name'),
                      booking_data.get('hotel_city'), booking_data.get('operator_name'),
@@ -263,7 +263,7 @@ def update_booking(booking_id: int, booking_data: Dict[str, Any], customers: Lis
             WHERE id = ?
         ''', (
             booking_data['name'],
-            booking_data['email'],
+            booking_data.get('email') or None,
             booking_data['phone'],
             booking_data['booking_type'],
             booking_data['base_amount'],

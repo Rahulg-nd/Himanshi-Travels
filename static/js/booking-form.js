@@ -154,7 +154,9 @@ function updateGstCalculation() {
     let finalAmount = baseAmount;
     
     if (applyGstCheckbox.checked) {
-        gstAmount = baseAmount * 0.18;
+        // Use GST percentage from configuration
+        const gstPercentage = window.GST_PERCENT || 5; // Default to 5% if not set
+        gstAmount = baseAmount * (gstPercentage / 100);
         finalAmount += gstAmount;
         gstRow.style.display = 'block';
     } else {
