@@ -11,6 +11,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from database import init_db
 from routes import create_and_configure_app
+from backup_service import start_backup_scheduler
 
 
 def setup_logging():
@@ -60,6 +61,13 @@ def main():
     logger.info("Initializing database...")
     init_db()
     logger.info("Database initialized successfully")
+    
+    # Start backup scheduler if enabled
+    try:
+        start_backup_scheduler()
+        logger.info("Backup scheduler started")
+    except Exception as e:
+        logger.warning(f"Failed to start backup scheduler: {e}")
     
     # Create and configure app
     logger.info("Creating Flask application...")

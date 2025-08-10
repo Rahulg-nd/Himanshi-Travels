@@ -106,6 +106,23 @@
     transform: translateY(-1px);
 }
 
+.whatsapp-btn {
+    background: #25D366;
+    color: white;
+    margin-left: 8px;
+}
+
+.whatsapp-btn:hover {
+    background: #1EBE57;
+    transform: translateY(-1px);
+}
+
+.whatsapp-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .edit-btn {
     background: #007bff;
     color: white;
@@ -129,6 +146,23 @@
 }
 
 .delete-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.email-btn {
+    background: #dc3545;
+    color: white;
+    margin-left: 8px;
+}
+
+.email-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.email-btn:disabled {
     background: #6c757d;
     cursor: not-allowed;
     transform: none;

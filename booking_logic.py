@@ -3,12 +3,21 @@ Business logic for Himanshi Travels booking operations
 """
 
 import json
+import os
 from datetime import datetime
 from typing import Dict, Any, List, Tuple, Optional
-from config import GST_PERCENT
+from dynamic_config import gst_percent, whatsapp_enabled, whatsapp_send_on_booking
+import dynamic_config
+
+# Initialize constants for backward compatibility  
+dynamic_config.init_module_constants()
+GST_PERCENT = dynamic_config.GST_PERCENT
+WHATSAPP_ENABLED = dynamic_config.WHATSAPP_ENABLED
+WHATSAPP_SEND_ON_BOOKING = dynamic_config.WHATSAPP_SEND_ON_BOOKING
 from database import create_booking, create_booking_customers
 from validators import BookingValidator
 from utils import clean_form_data, safe_float_conversion
+from email_service import send_booking_email
 
 
 def calculate_totals(base_amount: float, apply_gst: bool = True) -> Tuple[float, float]:
@@ -70,6 +79,63 @@ def process_single_booking(form_data: Dict[str, Any]) -> Tuple[bool, str, Option
     
     try:
         booking_id = create_booking(booking_data)
+        
+        # Send WhatsApp if enabled
+        if WHATSAPP_ENABLED and WHATSAPP_SEND_ON_BOOKING:
+            try:
+                from whatsapp_service import send_booking_whatsapp_with_pdf
+                from database import get_booking_by_id
+                from pdf_generator import generate_invoice_pdf
+                
+                # Get the created booking details
+                created_booking = get_booking_by_id(booking_id)
+                if created_booking:
+                    customers = [{'name': created_booking['name'], 'phone': created_booking['phone']}]
+                    
+                    # Generate PDF invoice
+                    try:
+                        pdf_path = generate_invoice_pdf(booking_id, created_booking, customers)
+                        success, message = send_booking_whatsapp_with_pdf(created_booking, customers, pdf_path)
+                        if success:
+                            print(f"WhatsApp message with PDF sent successfully for booking {booking_id}")
+                        else:
+                            print(f"WhatsApp with PDF failed for booking {booking_id}: {message}")
+                    except Exception as pdf_error:
+                        print(f"PDF generation failed for booking {booking_id}: {str(pdf_error)}")
+                        # Fallback to sending message without PDF
+                        from whatsapp_service import send_booking_whatsapp
+                        success, message = send_booking_whatsapp(created_booking, customers)
+                        if success:
+                            print(f"WhatsApp message (without PDF) sent successfully for booking {booking_id}")
+                        else:
+                            print(f"WhatsApp failed for booking {booking_id}: {message}")
+            except Exception as whatsapp_error:
+                print(f"WhatsApp service error for booking {booking_id}: {str(whatsapp_error)}")
+                # Don't fail the booking if WhatsApp fails
+        
+        # Send email notification if email provided
+        try:
+            if email and email.strip():
+                booking_data = {
+                    'id': booking_id,
+                    'name': name,
+                    'email': email,
+                    'booking_type': booking_type,
+                    'total': total,
+                    'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                
+                # Generate PDF path
+                pdf_path = f"bills/invoice_{booking_id}.pdf"
+                
+                if send_booking_email(booking_data, pdf_path if os.path.exists(pdf_path) else None):
+                    print(f"Booking confirmation email sent to {email}")
+                else:
+                    print(f"Failed to send booking confirmation email to {email}")
+        except Exception as email_error:
+            print(f"Email service error for booking {booking_id}: {str(email_error)}")
+            # Don't fail the booking if email fails
+        
         return True, 'Booking created successfully', booking_id
     except Exception as e:
         return False, f'Error creating booking: {str(e)}', None
@@ -127,6 +193,60 @@ def process_group_booking(form_data: Dict[str, Any]) -> Tuple[bool, str, Optiona
         
         # Create customers
         create_booking_customers(booking_id, customers)
+        
+        # Send WhatsApp if enabled
+        if WHATSAPP_ENABLED and WHATSAPP_SEND_ON_BOOKING:
+            try:
+                from whatsapp_service import send_booking_whatsapp_with_pdf
+                from database import get_booking_by_id
+                from pdf_generator import generate_invoice_pdf
+                
+                # Get the created booking details with customers
+                created_booking = get_booking_by_id(booking_id)
+                if created_booking:
+                    # Generate PDF invoice
+                    try:
+                        pdf_path = generate_invoice_pdf(booking_id, created_booking, customers)
+                        success, message = send_booking_whatsapp_with_pdf(created_booking, customers, pdf_path)
+                        if success:
+                            print(f"Group WhatsApp with PDF sent successfully for booking {booking_id}")
+                        else:
+                            print(f"Group WhatsApp with PDF failed for booking {booking_id}: {message}")
+                    except Exception as pdf_error:
+                        print(f"PDF generation failed for group booking {booking_id}: {str(pdf_error)}")
+                        # Fallback to sending message without PDF
+                        from whatsapp_service import send_booking_whatsapp
+                        success, message = send_booking_whatsapp(created_booking, customers)
+                        if success:
+                            print(f"Group WhatsApp (without PDF) sent successfully for booking {booking_id}")
+                        else:
+                            print(f"Group WhatsApp failed for booking {booking_id}: {message}")
+            except Exception as whatsapp_error:
+                print(f"WhatsApp service error for group booking {booking_id}: {str(whatsapp_error)}")
+                # Don't fail the booking if WhatsApp fails
+        
+        # Send email notification to primary customer if email provided
+        try:
+            if primary_customer.get('email') and primary_customer['email'].strip():
+                email_booking_data = {
+                    'id': booking_id,
+                    'name': primary_customer['name'],
+                    'email': primary_customer['email'],
+                    'booking_type': form_data['booking_type'],
+                    'total': grand_total,
+                    'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                
+                # Generate PDF path
+                pdf_path = f"bills/invoice_{booking_id}.pdf"
+                
+                if send_booking_email(email_booking_data, pdf_path if os.path.exists(pdf_path) else None):
+                    print(f"Group booking confirmation email sent to {primary_customer['email']}")
+                else:
+                    print(f"Failed to send group booking confirmation email to {primary_customer['email']}")
+        except Exception as email_error:
+            print(f"Email service error for group booking {booking_id}: {str(email_error)}")
+            # Don't fail the booking if email fails
         
         return True, 'Group booking created successfully', booking_id
         

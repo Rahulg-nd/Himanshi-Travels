@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Management - Himanshi Travels</title>
+    
+    <!-- External CSS Files -->
+    <link rel="stylesheet" href="/static/css/notifications.css">
+    <link rel="stylesheet" href="/static/css/modal.css">
+    
+    <style>
+        /* Configuration Management Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            margin: 10px 0 0;
+            font-size: 1.1em;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .nav-btn:hover {
+            background: #fff;
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+
+        .config-section {
+            background: rgba(255, 255, 255, 0.95);
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #2980b9, #1f638a);
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.4em;
+            text-transform: capitalize;
+        }
+
+        .section-toggle {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+        }
+
+        .section-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .section-content.expanded {
+            padding: 20px;
+            max-height: 2000px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .config-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .config-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-item.sensitive {
+            border-left-color: #e74c3c;
+            background: #fef9f9;
+        }
+
+        .config-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-type {
+            background: #ecf0f1;
+            color: #7f8c8d;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: normal;
+        }
+
+        .config-description {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .config-input.boolean {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .sensitive-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .action-buttons {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d68910;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .test-section {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #d1ecf1;
+        }
+
+        .test-section h4 {
+            margin: 0 0 10px;
+            color: #0c5460;
+        }
+
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Configuration Management</h1>
+            <p>Manage application settings, WhatsApp configuration, and business information</p>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="nav-btn">🏠 Home</a>
+            <a href="/bookings" class="nav-btn">📋 Bookings</a>
+            <button onclick="saveAllConfigs()" class="nav-btn btn-primary" id="saveBtn">💾 Save Changes</button>
+            <button onclick="testWhatsApp()" class="nav-btn btn-success" id="testWhatsAppBtn">📱 Test WhatsApp</button>
+            <button onclick="resetToDefaults()" class="nav-btn btn-warning">🔄 Reset to Defaults</button>
+        </div>
+
+        <div id="configSections">
+            {% for category in categories %}
+            <div class="config-section">
+                <div class="section-header" onclick="toggleSection('{{ category }}')">
+                    <h2>
+                        {% if category == 'business' %}🏢 Business Information
+                        {% elif category == 'whatsapp' %}📱 WhatsApp Configuration  
+                        {% elif category == 'twilio' %}☁️ Twilio Settings
+                        {% elif category == 'green_api' %}🌐 Green API Settings
+                        {% elif category == 'app' %}⚙️ Application Settings
+                        {% elif category == 'email' %}📧 Email Configuration
+                        {% else %}📂 {{ category|title }}
+                        {% endif %}
+                    </h2>
+                    <span class="section-toggle" id="toggle-{{ category }}">▼</span>
+                </div>
+                <div class="section-content" id="content-{{ category }}">
+                    <div class="config-grid">
+                        {% for config in configs_by_category[category] %}
+                        <div class="config-item {% if config.is_sensitive %}sensitive{% endif %}">
+                            <div class="config-label">
+                                <span>{{ config.config_key.replace('_', ' ')|title }}</span>
+                                <span class="config-type">{{ config.config_type }}</span>
+                            </div>
+                            
+                            {% if config.description %}
+                            <div class="config-description">{{ config.description }}</div>
+                            {% endif %}
+                            
+                            {% if config.is_sensitive %}
+                            <div class="sensitive-warning">
+                                🔐 This is a sensitive configuration. Value is hidden for security.
+                            </div>
+                            {% endif %}
+                            
+                            {% if config.config_type == 'boolean' %}
+                                <label>
+                                    <input type="checkbox" 
+                                           class="config-input boolean" 
+                                           data-key="{{ config.config_key }}"
+                                           data-type="{{ config.config_type }}"
+                                           data-category="{{ config.category }}"
+                                           data-description="{{ config.description }}"
+                                           data-sensitive="{{ config.is_sensitive }}"
+                                           {% if config.config_value == 'true' %}checked{% endif %}>
+                                    Enable
+                                </label>
+                            {% else %}
+                                <input type="{% if config.is_sensitive %}password{% elif config.config_type == 'number' %}number{% else %}text{% endif %}" 
+                                       class="config-input" 
+                                       data-key="{{ config.config_key }}"
+                                       data-type="{{ config.config_type }}"
+                                       data-category="{{ config.category }}"
+                                       data-description="{{ config.description }}"
+                                       data-sensitive="{{ config.is_sensitive }}"
+                                       value="{% if config.is_sensitive and config.config_value %}***{% else %}{{ config.config_value }}{% endif %}"
+                                       placeholder="{% if config.is_sensitive %}Enter {{ config.config_key.replace('_', ' ') }}{% else %}{{ config.config_key.replace('_', ' ')|title }}{% endif %}">
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if category == 'whatsapp' %}
+                    <div class="test-section">
+                        <h4>🧪 WhatsApp Test</h4>
+                        <p>Test your WhatsApp configuration by sending a test message:</p>
+                        <input type="text" id="testPhone" placeholder="+91-9999999999" style="margin-right: 10px; padding: 8px;">
+                        <button onclick="testWhatsAppWithPhone()" class="btn btn-primary">Send Test Message</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="loading" id="loading">
+            <h3>🔄 Processing...</h3>
+            <p>Please wait while we save your configuration changes.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration Management JavaScript
+        let hasUnsavedChanges = false;
+
+        // Toggle section expansion
+        function toggleSection(category) {
+            const content = document.getElementById(`content-${category}`);
+            const toggle = document.getElementById(`toggle-${category}`);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.textContent = '▼';
+            } else {
+                content.classList.add('expanded');
+                toggle.textContent = '▲';
+            }
+        }
+
+        // Expand all sections by default
+        document.addEventListener('DOMContentLoaded', function() {
+            const categories = {{ categories|tojson }};
+            categories.forEach(category => {
+                toggleSection(category);
+            });
+            
+            // Track changes
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('config-input')) {
+                    hasUnsavedChanges = true;
+                    document.getElementById('saveBtn').style.background = '#e74c3c';
+                    document.getElementById('saveBtn').textContent = '💾 Save Changes *';
+                }
+            });
+            
+            // Warn before leaving with unsaved changes
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        });
+
+        // Save all configuration changes
+        function saveAllConfigs() {
+            const inputs = document.querySelectorAll('.config-input');
+            const configs = [];
+            
+            console.log('🔧 SAVE CONFIG DEBUG: Found', inputs.length, 'config inputs');
+            
+            inputs.forEach(input => {
+                let value;
+                if (input.type === 'checkbox') {
+                    value = input.checked ? 'true' : 'false';
+                    console.log('🔧 Checkbox:', input.dataset.key, '=', value, '(checked:', input.checked, ')');
+                } else {
+                    value = input.value;
+                    console.log('🔧 Input:', input.dataset.key, '=', value);
+                }
+                
+                // Skip sensitive fields with *** placeholder
+                if (input.dataset.sensitive === '1' && value === '***') {
+                    console.log('🔧 Skipping sensitive field:', input.dataset.key);
+                    return;
+                }
+                
+                configs.push({
+                    key: input.dataset.key,
+                    value: value,
+                    type: input.dataset.type,
+                    category: input.dataset.category,
+                    description: input.dataset.description,
+                    is_sensitive: input.dataset.sensitive === '1'
+                });
+            });
+            
+            console.log('🔧 Configs to save:', configs.length);
+            
+            if (configs.length === 0) {
+                showNotification('⚠️ No changes to save', 'warning');
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            
+            fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ configs: configs })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success) {
+                    showNotification(`✅ ${data.message}`, 'success');
+                    hasUnsavedChanges = false;
+                    document.getElementById('saveBtn').style.background = '#27ae60';
+                    document.getElementById('saveBtn').textContent = '💾 Save Changes';
+                } else {
+                    showNotification(`❌ ${data.message}`, 'error');
+                    if (data.errors) {
+                        data.errors.forEach(error => {
+                            showNotification(`⚠️ ${error}`, 'warning');
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                showNotification('❌ Failed to save configuration', 'error');
+                console.error('Save error:', error);
+            });
+        }
+
+        // Test WhatsApp configuration
+        function testWhatsApp() {
+            testWhatsAppWithPhone();
+        }
+
+        function testWhatsAppWithPhone() {
+            const phone = document.getElementById('testPhone')?.value || '+91-9999999999';
+            
+            document.getElementById('testWhatsAppBtn').disabled = true;
+            document.getElementById('testWhatsAppBtn').textContent = '📱 Testing...';
+            
+            fetch('/api/config/test_whatsapp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ phone: phone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`✅ WhatsApp test successful! Message sent to ${data.test_phone}`, 'success');
+                } else {
+                    showNotification(`❌ WhatsApp test failed: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('❌ WhatsApp test failed', 'error');
+                console.error('WhatsApp test error:', error);
+            })
+            .finally(() => {
+                document.getElementById('testWhatsAppBtn').disabled = false;
+                document.getElementById('testWhatsAppBtn').textContent = '📱 Test WhatsApp';
+            });
+        }
+
+        // Reset to defaults (placeholder)
+        function resetToDefaults() {
+            if (confirm('⚠️ Are you sure you want to reset all configurations to default values?\n\nThis will overwrite all your current settings!')) {
+                showNotification('🔄 Reset to defaults feature coming soon!', 'info');
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success', duration = 5000) {
+            let container = document.getElementById('notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notification-container';
+                container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;';
+                document.body.appendChild(container);
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            container.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+    </script>
+</body>
+</html>

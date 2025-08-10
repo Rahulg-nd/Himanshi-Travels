@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking History - Himanshi Travels</title>
+    <title>Booking History - Himanshi Travels (Updated)</title>
     
     <!-- External CSS Files -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bookings.css') }}">
@@ -194,6 +194,7 @@
 
         <div class="nav-buttons">
             <a href="/" class="nav-btn">🆕 New Booking</a>
+            <a href="/config" class="nav-btn">⚙️ Configuration</a>
             <a href="/export_bookings" class="nav-btn">📊 Export CSV</a>
         </div>
 
@@ -265,6 +266,17 @@
     </div>
 
     <script>
+        // Configuration from server
+        const WHATSAPP_ENABLED = {{ whatsapp_enabled|tojson }};
+        const EMAIL_ENABLED = {{ email_enabled|tojson }};
+        
+        // Debug logging
+        console.log('🔧 CONFIG DEBUG:', {
+            WHATSAPP_ENABLED: WHATSAPP_ENABLED,
+            EMAIL_ENABLED: EMAIL_ENABLED,
+            timestamp: new Date().toISOString()
+        });
+        
         let currentPage = 1;
         let currentPagination = null;
         let selectedBookings = new Set();
@@ -318,6 +330,12 @@
 
         // Display bookings with delete functionality
         function displayBookings(bookings) {
+            console.log('🔧 DISPLAYING BOOKINGS:', {
+                count: bookings.length,
+                WHATSAPP_ENABLED: WHATSAPP_ENABLED,
+                EMAIL_ENABLED: EMAIL_ENABLED
+            });
+            
             const container = document.getElementById('bookingsContainer');
             
             if (bookings.length === 0) {
@@ -429,6 +447,16 @@
                             <a href="/regenerate_invoice/${booking.id}" class="action-btn download-btn" target="_blank">
                                 📄 Download Invoice
                             </a>
+                            ${WHATSAPP_ENABLED ? `
+                            <button onclick="sendBookingWhatsApp(${booking.id})" class="action-btn whatsapp-btn">
+                                📱 Send WhatsApp
+                            </button>
+                            ` : ''}
+                            ${EMAIL_ENABLED ? `
+                            <button onclick="sendBookingEmail(${booking.id})" class="action-btn email-btn">
+                                📧 Send Email
+                            </button>
+                            ` : ''}
                             <button onclick="editBooking(${booking.id})" class="action-btn edit-btn">
                                 ✏️ Edit
                             </button>

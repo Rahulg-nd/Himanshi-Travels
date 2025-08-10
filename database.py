@@ -4,7 +4,7 @@ Database operations for Himanshi Travels application
 
 import sqlite3
 from typing import List, Dict, Any, Optional, Tuple
-from config import DATABASE_FILE
+from dynamic_config import DATABASE_FILE
 
 
 def get_db_connection():
@@ -42,6 +42,19 @@ def init_db():
             seat_room_number TEXT,
             customer_amount REAL NOT NULL,
             FOREIGN KEY (booking_id) REFERENCES bookings (id) ON DELETE CASCADE
+        )''')
+        
+        # Create configuration table for app settings
+        cur.execute('''CREATE TABLE IF NOT EXISTS app_config (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            config_key TEXT UNIQUE NOT NULL,
+            config_value TEXT,
+            config_type TEXT DEFAULT 'string',
+            category TEXT DEFAULT 'general',
+            description TEXT,
+            is_sensitive INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
         
         # Add new columns if they don't exist
@@ -88,6 +101,9 @@ def init_db():
                 pass  # Index might already exist
         
         con.commit()
+        
+        # Initialize default configuration values
+        initialize_default_config()
 
 
 def create_booking(booking_data: Dict[str, Any]) -> int:
@@ -370,14 +386,146 @@ def bulk_delete_bookings(booking_ids: List[int]) -> Tuple[bool, str, int]:
     if deleted_count == 0:
         return False, 'No bookings were deleted', 0
     
-    return True, f'Successfully deleted {deleted_count} booking(s)', deleted_count
+    elif deleted_count == 1:
+        return True, '1 booking has been deleted successfully', deleted_count
+    else:
+        return True, f'{deleted_count} bookings have been deleted successfully', deleted_count
 
 
-def get_all_bookings_for_export() -> List[Tuple]:
-    """Get all bookings for CSV export"""
+# Configuration Management Functions
+
+def get_config_value(key: str, default_value: str = None) -> str:
+    """Get a configuration value by key"""
     with get_db_connection() as con:
         cur = con.cursor()
-        cur.execute('''SELECT id, name, email, phone, booking_type, base_amount, gst, total, date,
-                              hotel_name, hotel_city, operator_name, from_journey, to_journey
-                       FROM bookings ORDER BY date DESC''')
-        return cur.fetchall()
+        cur.execute("SELECT config_value FROM app_config WHERE config_key = ?", (key,))
+        result = cur.fetchone()
+        return result[0] if result else default_value
+
+
+def set_config_value(key: str, value: str, config_type: str = 'string', 
+                    category: str = 'general', description: str = '', 
+                    is_sensitive: bool = False) -> bool:
+    """Set a configuration value"""
+    with get_db_connection() as con:
+        cur = con.cursor()
+        
+        # Check if key exists
+        cur.execute("SELECT id FROM app_config WHERE config_key = ?", (key,))
+        exists = cur.fetchone()
+        
+        if exists:
+            # Update existing
+            cur.execute("""UPDATE app_config 
+                          SET config_value = ?, config_type = ?, category = ?, 
+                              description = ?, is_sensitive = ?, updated_at = CURRENT_TIMESTAMP 
+                          WHERE config_key = ?""", 
+                       (value, config_type, category, description, int(is_sensitive), key))
+        else:
+            # Insert new
+            cur.execute("""INSERT INTO app_config 
+                          (config_key, config_value, config_type, category, description, is_sensitive) 
+                          VALUES (?, ?, ?, ?, ?, ?)""", 
+                       (key, value, config_type, category, description, int(is_sensitive)))
+        
+        con.commit()
+        return True
+
+
+def get_all_config(category: str = None) -> List[Dict[str, Any]]:
+    """Get all configuration values, optionally filtered by category"""
+    with get_db_connection() as con:
+        cur = con.cursor()
+        
+        if category:
+            cur.execute("""SELECT config_key, config_value, config_type, category, 
+                                 description, is_sensitive, created_at, updated_at 
+                          FROM app_config WHERE category = ? 
+                          ORDER BY category, config_key""", (category,))
+        else:
+            cur.execute("""SELECT config_key, config_value, config_type, category, 
+                                 description, is_sensitive, created_at, updated_at 
+                          FROM app_config 
+                          ORDER BY category, config_key""")
+        
+        return [dict(row) for row in cur.fetchall()]
+
+
+def get_config_categories() -> List[str]:
+    """Get all configuration categories"""
+    with get_db_connection() as con:
+        cur = con.cursor()
+        cur.execute("SELECT DISTINCT category FROM app_config ORDER BY category")
+        return [row[0] for row in cur.fetchall()]
+
+
+def delete_config(key: str) -> bool:
+    """Delete a configuration value"""
+    with get_db_connection() as con:
+        cur = con.cursor()
+        cur.execute("DELETE FROM app_config WHERE config_key = ?", (key,))
+        con.commit()
+        return cur.rowcount > 0
+
+
+def get_all_bookings_for_export() -> List[Dict[str, Any]]:
+    """Get all bookings for export purposes"""
+    with get_db_connection() as con:
+        cur = con.cursor()
+        cur.execute('''SELECT b.*, 
+                              GROUP_CONCAT(bc.customer_name, '; ') as all_customer_names,
+                              GROUP_CONCAT(bc.customer_email, '; ') as all_customer_emails,
+                              GROUP_CONCAT(bc.customer_phone, '; ') as all_customer_phones
+                       FROM bookings b 
+                       LEFT JOIN booking_customers bc ON b.id = bc.booking_id 
+                       GROUP BY b.id 
+                       ORDER BY b.date DESC''')
+        return [dict(row) for row in cur.fetchall()]
+
+
+def initialize_default_config():
+    """Initialize default configuration values"""
+    default_configs = [
+        # Business Information
+        ('agency_name', 'Himanshi Travels', 'string', 'business', 'Travel agency name'),
+        ('agency_tagline', 'Your Journey, Our Passion', 'string', 'business', 'Agency tagline'),
+        ('gstin', '29ABCDE1234F2Z5', 'string', 'business', 'GST identification number'),
+        ('agency_address', '123 Travel Street, Adventure City, State 123456', 'string', 'business', 'Business address'),
+        ('agency_phone', '+91 98765 43210', 'string', 'business', 'Contact phone number'),
+        ('agency_email', 'info@himanshitravels.com', 'string', 'business', 'Contact email address'),
+        ('gst_percent', '5', 'number', 'business', 'GST percentage to apply'),
+        
+        # WhatsApp Configuration
+        ('whatsapp_enabled', 'true', 'boolean', 'whatsapp', 'Enable WhatsApp messaging'),
+        ('whatsapp_send_on_booking', 'true', 'boolean', 'whatsapp', 'Send WhatsApp automatically on booking creation'),
+        ('whatsapp_send_to_group_customers', 'false', 'boolean', 'whatsapp', 'Send individual WhatsApp to each customer in group bookings'),
+        ('whatsapp_provider', 'mock', 'string', 'whatsapp', 'WhatsApp provider (mock, twilio, green_api, business_api)'),
+        
+        # Twilio Configuration
+        ('twilio_account_sid', '', 'string', 'twilio', 'Twilio Account SID', True),
+        ('twilio_auth_token', '', 'string', 'twilio', 'Twilio Auth Token', True),
+        ('twilio_whatsapp_number', '+14155238886', 'string', 'twilio', 'Twilio WhatsApp number'),
+        
+        # Green API Configuration
+        ('green_api_instance_id', '', 'string', 'green_api', 'Green API Instance ID', True),
+        ('green_api_token', '', 'string', 'green_api', 'Green API Token', True),
+        
+        # Application Settings
+        ('app_debug', 'false', 'boolean', 'app', 'Enable debug mode'),
+        ('app_port', '8081', 'number', 'app', 'Application port'),
+        ('backup_enabled', 'true', 'boolean', 'app', 'Enable automatic database backups'),
+        ('backup_frequency', 'daily', 'string', 'app', 'Backup frequency (daily, weekly, monthly)'),
+        
+        # Email Configuration (for future use)
+        ('email_enabled', 'false', 'boolean', 'email', 'Enable email notifications'),
+        ('smtp_server', '', 'string', 'email', 'SMTP server address'),
+        ('smtp_port', '587', 'number', 'email', 'SMTP server port'),
+        ('smtp_username', '', 'string', 'email', 'SMTP username', True),
+        ('smtp_password', '', 'string', 'email', 'SMTP password', True),
+    ]
+    
+    for key, value, config_type, category, description, *is_sensitive in default_configs:
+        sensitive = is_sensitive[0] if is_sensitive else False
+        # Only set if not already exists
+        if not get_config_value(key):
+            set_config_value(key, value, config_type, category, description, sensitive)

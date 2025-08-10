@@ -1,3 +1,87 @@
+// WhatsApp Functionality
+function sendBookingWhatsApp(bookingId) {
+    const confirmSend = confirm(`📱 Send WhatsApp Confirmation\n\nSend booking details via WhatsApp for booking #${String(bookingId).padStart(6, '0')}?\n\nThis will send booking information to the customer's phone number.`);
+    
+    if (!confirmSend) {
+        return;
+    }
+
+    // Find the WhatsApp button and disable it temporarily
+    const whatsappBtn = document.querySelector(`button[onclick="sendBookingWhatsApp(${bookingId})"]`);
+    if (whatsappBtn) {
+        const originalText = whatsappBtn.textContent;
+        whatsappBtn.disabled = true;
+        whatsappBtn.textContent = '📤 Sending...';
+        
+        // Re-enable after 5 seconds regardless of outcome
+        setTimeout(() => {
+            whatsappBtn.disabled = false;
+            whatsappBtn.textContent = originalText;
+        }, 5000);
+    }
+
+    fetch(`/send_whatsapp/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`✅ WhatsApp message sent successfully for booking #${String(bookingId).padStart(6, '0')}`, 'success');
+        } else {
+            showNotification(`❌ Failed to send WhatsApp: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending WhatsApp:', error);
+        showNotification('❌ Error sending WhatsApp. Please try again.', 'error');
+    });
+}
+
+// Email Functionality
+function sendBookingEmail(bookingId) {
+    const confirmSend = confirm(`📧 Send Email Confirmation\n\nSend booking details via email for booking #${String(bookingId).padStart(6, '0')}?\n\nThis will send booking information and invoice to the customer's email address.`);
+    
+    if (!confirmSend) {
+        return;
+    }
+
+    // Find the Email button and disable it temporarily
+    const emailBtn = document.querySelector(`button[onclick="sendBookingEmail(${bookingId})"]`);
+    if (emailBtn) {
+        const originalText = emailBtn.textContent;
+        emailBtn.disabled = true;
+        emailBtn.textContent = '📤 Sending...';
+        
+        // Re-enable after 5 seconds regardless of outcome
+        setTimeout(() => {
+            emailBtn.disabled = false;
+            emailBtn.textContent = originalText;
+        }, 5000);
+    }
+
+    fetch(`/api/send_booking_email/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`✅ Email sent successfully for booking #${String(bookingId).padStart(6, '0')}`, 'success');
+        } else {
+            showNotification(`❌ Failed to send email: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending email:', error);
+        showNotification('❌ Error sending email. Please try again.', 'error');
+    });
+}
+
 // Delete and Edit Booking Functionality
 function deleteBooking(bookingId, customerName, buttonElement) {
     // First confirmation

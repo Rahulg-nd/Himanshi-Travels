@@ -50,6 +50,9 @@ function generateBookingCard(booking) {
                 <a href="/invoice/${booking.id}" target="_blank" class="action-btn download-btn">
                     📄 Download Invoice
                 </a>
+                <button onclick="sendBookingWhatsApp(${booking.id})" class="action-btn whatsapp-btn">
+                    📱 Send WhatsApp
+                </button>
                 <button onclick="editBooking(${booking.id})" class="action-btn edit-btn">
                     ✏️ Edit
                 </button>

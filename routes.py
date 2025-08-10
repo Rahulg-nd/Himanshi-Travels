@@ -5,10 +5,18 @@ Flask routes for Himanshi Travels application
 import os
 import csv
 import io
+import logging
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, send_file, make_response, jsonify
 
-from config import DEFAULT_PAGE_SIZE, GST_PERCENT
+logger = logging.getLogger(__name__)
+
+from dynamic_config import DEFAULT_PAGE_SIZE
+import dynamic_config
+
+# Initialize constants for backward compatibility
+dynamic_config.init_module_constants()
+GST_PERCENT = dynamic_config.GST_PERCENT
 from database import (init_db, get_booking_by_id, search_bookings, delete_booking, 
                      bulk_delete_bookings, get_all_bookings_for_export)
 from booking_logic import process_single_booking, process_group_booking, process_booking_update
@@ -76,7 +84,11 @@ def register_routes(app):
     @app.route('/bookings')
     def view_bookings():
         """Display all bookings with search functionality"""
-        return render_template('bookings.html', gst_percent=GST_PERCENT)
+        from dynamic_config import whatsapp_enabled, email_enabled
+        return render_template('bookings.html', 
+                             gst_percent=GST_PERCENT,
+                             whatsapp_enabled=whatsapp_enabled(),
+                             email_enabled=email_enabled())
 
     @app.route('/api/search_bookings')
     def search_bookings_api():
@@ -260,177 +272,457 @@ def register_routes(app):
         routes = get_popular_routes()
         return {'routes': routes}
 
-    @app.route('/test_autocomplete')
-    def test_autocomplete():
-        """Test page for autocomplete functionality"""
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Autocomplete Test</title>
-            <link rel="stylesheet" href="/static/css/autocomplete.css">
-            <style>
-                body { padding: 20px; font-family: Arial, sans-serif; }
-                .form-group { margin: 20px 0; }
-                label { display: block; margin-bottom: 5px; font-weight: bold; }
-                input { padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 5px; }
-                .autocomplete-container { position: relative; display: inline-block; }
-                .test-result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
-            </style>
-        </head>
-        <body>
-            <h1>Autocomplete Test Page</h1>
+    @app.route('/send_whatsapp/<int:booking_id>', methods=['POST'])
+    def send_booking_whatsapp_manual(booking_id):
+        """Manually send WhatsApp for a specific booking with PDF attachment"""
+        try:
+            from whatsapp_service import send_booking_whatsapp_with_pdf, send_booking_whatsapp
+            from database import get_booking_by_id
+            from pdf_generator import generate_invoice_pdf
             
-            <div class="form-group">
-                <div class="autocomplete-container">
-                    <label for="test_city">Test City Input:</label>
-                    <input type="text" id="test_city" placeholder="Type a city name (e.g., 'new')" autocomplete="off">
-                    <div id="test_city_suggestions" class="autocomplete-suggestions"></div>
-                </div>
-            </div>
+            # Get booking details
+            booking = get_booking_by_id(booking_id)
+            if not booking:
+                return jsonify({
+                    'success': False,
+                    'message': 'Booking not found'
+                }), 404
             
-            <div class="form-group">
-                <div class="autocomplete-container">
-                    <label for="test_country">Test Country Input:</label>
-                    <input type="text" id="test_country" placeholder="Type a country name (e.g., 'uni')" autocomplete="off">
-                    <div id="test_country_suggestions" class="autocomplete-suggestions"></div>
-                </div>
-            </div>
+            # Get customers if it's a group booking
+            customers = booking.get('customers', [])
             
-            <button onclick="testAutoComplete()">Run Test</button>
-            <div id="test-results" class="test-result">
-                Test results will appear here...
-            </div>
+            # For single bookings, create customer list from booking data
+            if not customers:
+                customers = [{
+                    'name': booking.get('name', ''),
+                    'phone': booking.get('phone', ''),
+                    'email': booking.get('email', '')
+                }]
             
-            <script src="/static/js/autocomplete.js"></script>
-            <script>
-                // Initialize test autocomplete
-                document.addEventListener('DOMContentLoaded', function() {
-                    console.log('Test page loaded');
-                    
-                    // Initialize autocomplete for test fields
-                    new AutoComplete('test_city', 'test_city_suggestions', '/api/cities');
-                    new AutoComplete('test_country', 'test_country_suggestions', '/api/countries');
-                    
-                    console.log('Test autocomplete initialized');
-                });
+            # Try to send WhatsApp with PDF attachment
+            try:
+                pdf_path = generate_invoice_pdf(booking_id, booking, customers)
+                success, message = send_booking_whatsapp_with_pdf(booking, customers, pdf_path)
                 
-                // Enhanced test function
-                function testAutoComplete() {
-                    const results = document.getElementById('test-results');
-                    results.innerHTML = '<h3>Running tests...</h3>';
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': 'WhatsApp message with invoice PDF sent successfully'
+                    })
+                else:
+                    # If PDF WhatsApp fails, try without PDF
+                    success, message = send_booking_whatsapp(booking, customers)
+                    return jsonify({
+                        'success': success,
+                        'message': f'WhatsApp sent without PDF (PDF attachment failed): {message}' if success else message
+                    })
                     
-                    // Test API endpoints
-                    fetch('/api/cities?q=new&limit=3')
-                        .then(response => response.json())
-                        .then(data => {
-                            results.innerHTML += '<p>✅ Cities API working: ' + data.suggestions.length + ' results</p>';
-                        })
-                        .catch(error => {
-                            results.innerHTML += '<p>❌ Cities API failed: ' + error.message + '</p>';
-                        });
-                    
-                    fetch('/api/countries?q=uni&limit=3')
-                        .then(response => response.json())
-                        .then(data => {
-                            results.innerHTML += '<p>✅ Countries API working: ' + data.suggestions.length + ' results</p>';
-                        })
-                        .catch(error => {
-                            results.innerHTML += '<p>❌ Countries API failed: ' + error.message + '</p>';
-                        });
-                }
-            </script>
-        </body>
-        </html>
-        """
+            except Exception:
+                # If PDF generation fails, send without PDF
+                success, message = send_booking_whatsapp(booking, customers)
+                return jsonify({
+                    'success': success,
+                    'message': f'WhatsApp sent without PDF (PDF generation failed): {message}' if success else message
+                })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Error sending WhatsApp: {str(e)}'
+            }), 500
+    
+    @app.route('/send_custom_whatsapp', methods=['POST'])
+    def send_custom_whatsapp_route():
+        """Send custom WhatsApp message"""
+        try:
+            from whatsapp_service import send_custom_whatsapp
+            
+            data = request.get_json() or {}
+            phone = data.get('phone', '').strip()
+            message = data.get('message', '').strip()
+            
+            if not phone or not message:
+                return jsonify({
+                    'success': False,
+                    'message': 'Phone number and message are required'
+                }), 400
+            
+            # Send WhatsApp
+            success, response = send_custom_whatsapp(phone, message)
+            
+            return jsonify({
+                'success': success,
+                'message': response
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Error sending WhatsApp: {str(e)}'
+            }), 500
+    
+    @app.route('/whatsapp_status')
+    def whatsapp_status():
+        """Check WhatsApp service status"""
+        try:
+            from whatsapp_service import test_whatsapp_service
+            from dynamic_config import whatsapp_enabled, whatsapp_send_on_booking
+            WHATSAPP_ENABLED = whatsapp_enabled()
+            WHATSAPP_SEND_ON_BOOKING = whatsapp_send_on_booking()
+            
+            test_result = test_whatsapp_service()
+            
+            return jsonify({
+                'whatsapp_enabled': WHATSAPP_ENABLED,
+                'auto_send_on_booking': WHATSAPP_SEND_ON_BOOKING,
+                'provider': test_result.get('provider', 'Unknown'),
+                'status': 'active' if WHATSAPP_ENABLED else 'disabled'
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'whatsapp_enabled': False,
+                'error': str(e),
+                'status': 'error'
+            }), 500
 
-    @app.route('/test_calculations')
-    def test_calculations():
-        """Test page for verifying calculation logic"""
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Calculation Test</title>
-            <style>
-                body { padding: 20px; font-family: Arial, sans-serif; }
-                .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-                .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 3px; }
-                input, button { margin: 5px; padding: 8px; }
-            </style>
-        </head>
-        <body>
-            <h1>Calculation Test</h1>
+    @app.route('/config')
+    def config_page():
+        """Configuration management page"""
+        from database import get_all_config, get_config_categories
+        
+        categories = get_config_categories()
+        all_config = get_all_config()
+        
+        # Group configs by category
+        configs_by_category = {}
+        for config in all_config:
+            category = config['category']
+            if category not in configs_by_category:
+                configs_by_category[category] = []
+            configs_by_category[category].append(config)
+        
+        return render_template('config.html', 
+                             categories=categories, 
+                             configs_by_category=configs_by_category)
+
+    @app.route('/api/config', methods=['GET'])
+    def get_config_api():
+        """Get configuration values API"""
+        from database import get_all_config
+        
+        category = request.args.get('category')
+        configs = get_all_config(category)
+        
+        # Don't expose sensitive values in API responses
+        for config in configs:
+            if config['is_sensitive']:
+                config['config_value'] = '***' if config['config_value'] else ''
+        
+        return jsonify({
+            'success': True,
+            'configs': configs
+        })
+
+    @app.route('/api/config', methods=['POST'])
+    def update_config_api():
+        """Update configuration values API"""
+        try:
+            from database import set_config_value
             
-            <div class="test-section">
-                <h3>Single Booking</h3>
-                <input type="number" id="single_base" placeholder="Base Amount" value="1000">
-                <input type="checkbox" id="single_gst" checked> Apply GST (18%)
-                <button onclick="testSingleCalculation()">Calculate</button>
-                <div class="result" id="single_result">Result will appear here</div>
-            </div>
+            data = request.get_json()
             
-            <div class="test-section">
-                <h3>Group Booking</h3>
-                <input type="number" id="customer1_amount" placeholder="Customer 1 Amount" value="1500">
-                <input type="number" id="customer2_amount" placeholder="Customer 2 Amount" value="2000">
-                <input type="checkbox" id="group_gst" checked> Apply GST (18%)
-                <button onclick="testGroupCalculation()">Calculate</button>
-                <div class="result" id="group_result">Result will appear here</div>
-            </div>
+            if not data or 'configs' not in data:
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid request data'
+                }), 400
             
-            <script>
-                function testSingleCalculation() {
-                    const base = parseFloat(document.getElementById('single_base').value) || 0;
-                    const applyGst = document.getElementById('single_gst').checked;
+            updated_count = 0
+            errors = []
+            
+            for config_update in data['configs']:
+                try:
+                    key = config_update['key']
+                    value = config_update['value']
+                    config_type = config_update.get('type', 'string')
+                    category = config_update.get('category', 'general')
+                    description = config_update.get('description', '')
+                    is_sensitive = config_update.get('is_sensitive', False)
                     
-                    let gst = 0;
-                    let total = base;
+                    # Validate required fields
+                    if not key:
+                        errors.append('Configuration key is required')
+                        continue
                     
-                    if (applyGst) {
-                        gst = base * 0.18;
-                        total = base + gst;
-                    }
+                    # Type validation
+                    if config_type == 'boolean':
+                        if value.lower() not in ['true', 'false']:
+                            errors.append(f'Invalid boolean value for {key}')
+                            continue
+                    elif config_type == 'number':
+                        try:
+                            float(value)
+                        except ValueError:
+                            errors.append(f'Invalid number value for {key}')
+                            continue
                     
-                    document.getElementById('single_result').innerHTML = `
-                        Base: ₹${base.toFixed(2)}<br>
-                        GST (18%): ₹${gst.toFixed(2)}<br>
-                        <strong>Total: ₹${total.toFixed(2)}</strong>
-                    `;
-                }
+                    set_config_value(key, value, config_type, category, description, is_sensitive)
+                    updated_count += 1
+                    
+                except Exception as e:
+                    errors.append(f'Error updating {key}: {str(e)}')
+            
+            # Refresh the dynamic configuration cache after updates
+            if updated_count > 0:
+                try:
+                    from dynamic_config import refresh_config
+                    refresh_config()
+                except Exception as e:
+                    errors.append(f'Warning: Failed to refresh config cache: {str(e)}')
+            
+            if errors:
+                return jsonify({
+                    'success': False,
+                    'message': f'Updated {updated_count} configs with {len(errors)} errors',
+                    'errors': errors
+                }), 400
+            
+            return jsonify({
+                'success': True,
+                'message': f'Successfully updated {updated_count} configuration(s)',
+                'updated_count': updated_count
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Configuration update failed: {str(e)}'
+            }), 500
+
+    @app.route('/api/config/<config_key>', methods=['DELETE'])
+    def delete_config_api(config_key):
+        """Delete a configuration value"""
+        try:
+            from database import delete_config
+            
+            if delete_config(config_key):
+                return jsonify({
+                    'success': True,
+                    'message': f'Configuration {config_key} deleted successfully'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': f'Configuration {config_key} not found'
+                }), 404
                 
-                function testGroupCalculation() {
-                    const amount1 = parseFloat(document.getElementById('customer1_amount').value) || 0;
-                    const amount2 = parseFloat(document.getElementById('customer2_amount').value) || 0;
-                    const applyGst = document.getElementById('group_gst').checked;
-                    
-                    const baseTotal = amount1 + amount2;
-                    let gst = 0;
-                    let finalTotal = baseTotal;
-                    
-                    if (applyGst) {
-                        gst = baseTotal * 0.18;
-                        finalTotal = baseTotal + gst;
-                    }
-                    
-                    document.getElementById('group_result').innerHTML = `
-                        Customer 1: ₹${amount1.toFixed(2)}<br>
-                        Customer 2: ₹${amount2.toFixed(2)}<br>
-                        Base Total: ₹${baseTotal.toFixed(2)}<br>
-                        GST (18%): ₹${gst.toFixed(2)}<br>
-                        <strong>Final Total: ₹${finalTotal.toFixed(2)}</strong>
-                    `;
-                }
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Error deleting configuration: {str(e)}'
+            }), 500
+
+    @app.route('/api/config/test_whatsapp', methods=['POST'])
+    def test_whatsapp_config():
+        """Test WhatsApp configuration"""
+        try:
+            from whatsapp_service import get_whatsapp_service
+            
+            data = request.get_json()
+            phone = data.get('phone', '+91-9999999999')
+            
+            whatsapp_service = get_whatsapp_service()
+            success, message = whatsapp_service.send_message(
+                phone, 
+                "🧪 Test message from Himanshi Travels configuration panel!"
+            )
+            
+            return jsonify({
+                'success': success,
+                'message': message,
+                'test_phone': phone
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'WhatsApp test failed: {str(e)}'
+            }), 500
+
+    @app.route('/api/config/test_email', methods=['POST'])
+    def test_email():
+        """Test email configuration"""
+        try:
+            data = request.get_json() or {}
+            test_email_addr = data.get('email', '')
+            
+            if not test_email_addr:
+                return jsonify({
+                    'success': False,
+                    'message': 'Email address is required'
+                }), 400
+            
+            from email_service import test_email_config
+            result = test_email_config(test_email_addr)
+            
+            if result['success']:
+                return jsonify(result)
+            else:
+                return jsonify(result), 400
                 
-                // Auto-calculate on page load
-                testSingleCalculation();
-                testGroupCalculation();
-            </script>
-        </body>
-        </html>
-        """
+        except Exception as e:
+            logger.error(f"Email test error: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Email test failed: {str(e)}'
+            }), 500
+        
+    @app.route('/api/backup', methods=['GET'])
+    def list_backups():
+        """List all database backups"""
+        try:
+            from backup_service import list_database_backups
+            backups = list_database_backups()
+            
+            return jsonify({
+                'success': True,
+                'backups': backups,
+                'count': len(backups)
+            })
+            
+        except Exception as e:
+            logger.error(f"List backups error: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Failed to list backups: {str(e)}'
+            }), 500
+    
+    @app.route('/api/backup/create', methods=['POST'])
+    def create_backup():
+        """Create a new database backup"""
+        try:
+            data = request.get_json() or {}
+            backup_name = data.get('name')
+            
+            from backup_service import create_database_backup
+            result = create_database_backup(backup_name)
+            
+            if result['success']:
+                return jsonify(result)
+            else:
+                return jsonify(result), 500
+                
+        except Exception as e:
+            logger.error(f"Create backup error: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Failed to create backup: {str(e)}'
+            }), 500
+    
+    @app.route('/api/backup/restore', methods=['POST'])
+    def restore_backup():
+        """Restore database from backup"""
+        try:
+            data = request.get_json() or {}
+            backup_filename = data.get('filename')
+            
+            if not backup_filename:
+                return jsonify({
+                    'success': False,
+                    'message': 'Backup filename is required'
+                }), 400
+            
+            from backup_service import restore_database_backup
+            result = restore_database_backup(backup_filename)
+            
+            if result['success']:
+                return jsonify(result)
+            else:
+                return jsonify(result), 500
+                
+        except Exception as e:
+            logger.error(f"Restore backup error: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Failed to restore backup: {str(e)}'
+            }), 500
 
+    @app.route('/api/send_booking_email/<int:booking_id>', methods=['POST'])
+    def send_booking_email_api(booking_id):
+        """Send booking email manually"""
+        try:
+            # Get booking details
+            booking = get_booking_by_id(booking_id)
+            if not booking:
+                return jsonify({
+                    'success': False,
+                    'message': 'Booking not found'
+                }), 404
+            
+            # Check if email is enabled
+            from dynamic_config import email_enabled
+            if not email_enabled():
+                return jsonify({
+                    'success': False,
+                    'message': 'Email service is disabled'
+                }), 400
+            
+            # Check if booking has email
+            if not booking.get('email'):
+                return jsonify({
+                    'success': False,
+                    'message': 'No email address found for this booking'
+                }), 400
+            
+            # Prepare booking data for email
+            booking_data = {
+                'id': booking['id'],
+                'name': booking['name'],
+                'email': booking['email'],
+                'booking_type': booking['booking_type'],
+                'total': booking['total'],
+                'date': booking['date']
+            }
+            
+            # Check if PDF exists
+            pdf_path = f"bills/invoice_{booking_id}.pdf"
+            
+            # Send email
+            from email_service import send_booking_email
+            success = send_booking_email(booking_data, pdf_path if os.path.exists(pdf_path) else None)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': f'Email sent successfully to {booking["email"]}'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to send email'
+                }), 500
+                
+        except Exception as e:
+            logger.error(f"Send booking email error: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Failed to send email: {str(e)}'
+            }), 500
 
+    @app.route('/debug/config')
+    def debug_config():
+        """Debug configuration values"""
+        from dynamic_config import whatsapp_enabled, email_enabled
+        return {
+            'whatsapp_enabled': whatsapp_enabled(),
+            'email_enabled': email_enabled(),
+            'whatsapp_type': str(type(whatsapp_enabled())),
+            'email_type': str(type(email_enabled())),
+            'message': 'Configuration debug info'
+        }
+
+    # Configuration Management Routes
 def create_and_configure_app():
     """Create and configure the complete Flask application"""
     app = create_app()

@@ -12,8 +12,20 @@ from reportlab.lib.colors import HexColor, black, white
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
 
-from config import (AGENCY_NAME, AGENCY_TAGLINE, AGENCY_ADDRESS, 
-                   AGENCY_PHONE, AGENCY_EMAIL, LOGO_PATH, BILLS_DIRECTORY, GST_PERCENT)
+from dynamic_config import (agency_name, agency_tagline, agency_address, 
+                           agency_phone, agency_email, gst_percent)
+import dynamic_config
+
+# Initialize constants for backward compatibility
+dynamic_config.init_module_constants()
+AGENCY_NAME = dynamic_config.AGENCY_NAME
+AGENCY_TAGLINE = dynamic_config.AGENCY_TAGLINE  
+AGENCY_ADDRESS = dynamic_config.AGENCY_ADDRESS
+AGENCY_PHONE = dynamic_config.AGENCY_PHONE
+AGENCY_EMAIL = dynamic_config.AGENCY_EMAIL
+GST_PERCENT = dynamic_config.GST_PERCENT
+LOGO_PATH = dynamic_config.LOGO_PATH
+BILLS_DIRECTORY = dynamic_config.BILLS_DIRECTORY
 from booking_logic import get_vehicle_label
 
 
