@@ -346,3 +346,87 @@ def generate_invoice_pdf(booking_id: int, booking: Dict[str, Any], customers: Li
     # Build PDF
     doc.build(story)
     return file_path
+
+
+def test_pdf_generation(test_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Test PDF generation system"""
+    try:
+        # Test required imports
+        try:
+            from reportlab.platypus import SimpleDocTemplate
+            from reportlab.lib.pagesizes import letter
+        except ImportError as e:
+            return {
+                'success': False,
+                'message': f'PDF library import failed: {str(e)}',
+                'details': 'ReportLab library may not be installed'
+            }
+        
+        # Test bills directory
+        bills_dir = BILLS_DIRECTORY
+        if not os.path.exists(bills_dir):
+            try:
+                os.makedirs(bills_dir, exist_ok=True)
+            except Exception as e:
+                return {
+                    'success': False,
+                    'message': f'Cannot create bills directory: {str(e)}',
+                    'details': f'Path: {bills_dir}'
+                }
+        
+        # Test basic PDF creation
+        test_file = os.path.join(bills_dir, 'test_pdf.pdf')
+        try:
+            doc = SimpleDocTemplate(test_file, pagesize=letter)
+            from reportlab.platypus import Paragraph
+            from reportlab.lib.styles import getSampleStyleSheet
+            
+            styles = getSampleStyleSheet()
+            story = [Paragraph("Test PDF Generation", styles['Title'])]
+            doc.build(story)
+            
+            # Check if file was created
+            if os.path.exists(test_file):
+                # Clean up test file
+                os.remove(test_file)
+                file_created = True
+            else:
+                file_created = False
+                
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'PDF creation test failed: {str(e)}',
+                'details': 'Cannot create test PDF file'
+            }
+        
+        if not file_created:
+            return {
+                'success': False,
+                'message': 'PDF file was not created successfully',
+                'details': 'File creation process completed but no file found'
+            }
+        
+        # Test configuration access
+        try:
+            _ = AGENCY_NAME  # Test access to config
+            _ = LOGO_PATH    # Test access to config
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Configuration access failed: {str(e)}',
+                'details': 'Cannot access PDF generation configuration'
+            }
+        
+        return {
+            'success': True,
+            'message': 'PDF generation test successful',
+            'details': f'Test PDF created and removed from {bills_dir}'
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'message': f'PDF generation test failed: {str(e)}',
+            'details': 'Unexpected error during PDF test'
+        }

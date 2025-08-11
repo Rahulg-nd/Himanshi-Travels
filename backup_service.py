@@ -307,3 +307,67 @@ def start_backup_scheduler():
 def stop_backup_scheduler():
     """Convenience function to stop backup scheduler"""
     backup_service.stop_scheduler()
+
+def test_backup_system() -> Dict[str, Any]:
+    """Test backup system functionality"""
+    try:
+        # Test if backup service can be initialized
+        test_service = BackupService()
+        
+        # Test configuration access
+        test_service._init_config()
+        
+        if not test_service._initialized:
+            return {
+                'success': False,
+                'message': 'Backup service failed to initialize',
+                'details': 'Configuration could not be loaded'
+            }
+        
+        # Test backup directory access
+        backup_dir = test_service.get_backup_directory()
+        if not os.path.exists(backup_dir):
+            try:
+                os.makedirs(backup_dir, exist_ok=True)
+            except Exception as e:
+                return {
+                    'success': False,
+                    'message': f'Cannot create backup directory: {str(e)}',
+                    'details': f'Path: {backup_dir}'
+                }
+        
+        # Test database file access
+        if not os.path.exists(test_service.database_file):
+            return {
+                'success': False,
+                'message': 'Database file not found',
+                'details': f'Path: {test_service.database_file}'
+            }
+        
+        # Test database connectivity
+        try:
+            conn = sqlite3.connect(test_service.database_file)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table'")
+            table_count = cursor.fetchone()[0]
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Database connectivity test failed: {str(e)}',
+                'details': 'Cannot read from database'
+            }
+        
+        return {
+            'success': True,
+            'message': 'Backup system test successful',
+            'details': f'Backup directory accessible, database has {table_count} tables'
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'message': f'Backup system test failed: {str(e)}',
+            'details': 'Unexpected error during backup test'
+        }

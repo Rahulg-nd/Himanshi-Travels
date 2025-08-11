@@ -39,7 +39,7 @@ class EmailService:
         self._init_config()
         if not self.config:
             return False
-        return self.config.get_bool('email_enabled', False)
+        return self.config.get_bool('EMAIL_ENABLED', False)
     
     def get_smtp_config(self) -> Dict[str, Any]:
         """Get SMTP configuration"""
@@ -48,12 +48,12 @@ class EmailService:
             return {}
             
         return {
-            'server': self.config.get_str('smtp_server', ''),
-            'port': self.config.get_int('smtp_port', 587),
-            'username': self.config.get_str('smtp_username', ''),
-            'password': self.config.get_str('smtp_password', ''),
-            'use_tls': self.config.get_bool('smtp_use_tls', True),
-            'from_email': self.config.get_str('from_email', '') or self.config.get_str('smtp_username', ''),
+            'server': self.config.get_str('SMTP_HOST', ''),
+            'port': self.config.get_int('SMTP_PORT', 587),
+            'username': self.config.get_str('SMTP_USERNAME', ''),
+            'password': self.config.get_str('SMTP_PASSWORD', ''),
+            'use_tls': True,  # Always use TLS for security
+            'from_email': self.config.get_str('FROM_EMAIL', '') or self.config.get_str('SMTP_USERNAME', ''),
         }
     
     def send_email(self, to_emails: List[str], subject: str, body: str, 

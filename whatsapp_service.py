@@ -336,13 +336,13 @@ def get_whatsapp_service() -> WhatsAppProvider:
 
 def create_whatsapp_service() -> WhatsAppProvider:
     """Create WhatsApp service based on configuration"""
-    provider = dynamic_config.config('WHATSAPP_PROVIDER', 'mock').lower()
+    provider = dynamic_config.config.get_str('WHATSAPP_PROVIDER', 'mock').lower()
     
     try:
         if provider == 'twilio':
-            account_sid = dynamic_config.config('TWILIO_ACCOUNT_SID', '')
-            auth_token = dynamic_config.config('TWILIO_AUTH_TOKEN', '')
-            from_number = dynamic_config.config('TWILIO_WHATSAPP_NUMBER', '')
+            account_sid = dynamic_config.config.get_str('TWILIO_ACCOUNT_SID', '')
+            auth_token = dynamic_config.config.get_str('TWILIO_AUTH_TOKEN', '')
+            from_number = dynamic_config.config.get_str('TWILIO_WHATSAPP_NUMBER', '')
             
             if account_sid and auth_token and from_number:
                 return TwilioWhatsAppProvider(account_sid, auth_token, from_number)
@@ -350,8 +350,8 @@ def create_whatsapp_service() -> WhatsAppProvider:
                 logger.warning("Twilio WhatsApp credentials not configured. Using mock provider.")
                 
         elif provider == 'business_api':
-            access_token = dynamic_config.config('WHATSAPP_ACCESS_TOKEN', '')
-            phone_number_id = dynamic_config.config('WHATSAPP_PHONE_NUMBER_ID', '')
+            access_token = dynamic_config.config.get_str('WHATSAPP_ACCESS_TOKEN', '')
+            phone_number_id = dynamic_config.config.get_str('WHATSAPP_PHONE_NUMBER_ID', '')
             
             if access_token and phone_number_id:
                 return WhatsAppBusinessAPIProvider(access_token, phone_number_id)
@@ -359,8 +359,8 @@ def create_whatsapp_service() -> WhatsAppProvider:
                 logger.warning("WhatsApp Business API credentials not configured. Using mock provider.")
                 
         elif provider == 'green_api':
-            instance_id = dynamic_config.config('GREEN_API_INSTANCE_ID', '')
-            api_token = dynamic_config.config('GREEN_API_TOKEN', '')
+            instance_id = dynamic_config.config.get_str('GREEN_API_INSTANCE_ID', '')
+            api_token = dynamic_config.config.get_str('GREEN_API_TOKEN', '')
             
             if instance_id and api_token:
                 return GreenAPIProvider(instance_id, api_token)
@@ -544,7 +544,7 @@ def test_whatsapp_service():
             'test_success': success,
             'test_response': response,
             'whatsapp_enabled': dynamic_config.whatsapp_enabled(),
-            'auto_send_on_booking': dynamic_config.config('WHATSAPP_SEND_ON_BOOKING', False)
+            'auto_send_on_booking': dynamic_config.config.get_bool('WHATSAPP_SEND_ON_BOOKING', False)
         }
         
     except Exception as e:

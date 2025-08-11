@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Management - Himanshi Travels</title>
+    
+    <!-- External CSS Files -->
+    <link rel="stylesheet" href="/static/css/notifications.css">
+    <link rel="stylesheet" href="/static/css/modal.css">
+    <link rel="stylesheet" href="/static/css/config.css">
+    <link rel="stylesheet" href="/static/css/logo-management.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Configuration Management</h1>
+            <p>Manage your travel agency settings and preferences</p>
+            
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn">🏠 Home</a>
+                <a href="/bookings" class="nav-btn">📋 Bookings</a>
+                <button onclick="saveAllConfigs()" class="nav-btn success">💾 Save All Changes</button>
+                <button onclick="resetToDefaults()" class="nav-btn danger">🔄 Reset to Defaults</button>
+                <button onclick="testNotification()" class="nav-btn info" style="background: #17a2b8;">🧪 Test Notification</button>
+            </div>
+        </div>
+
+        <!-- Notification area -->
+        <div id="notification-container"></div>
+
+        <!-- Logo Management Section -->
+        {% include 'config/logo_management.html' %}
+
+        <!-- Configuration Categories -->
+        {% for category in categories %}
+        <div class="config-section" id="category-{{ category.value }}">
+            <div class="section-header" 
+                 onclick="toggleSection('{{ category.value }}')" 
+                 onkeydown="handleKeyDown(event, '{{ category.value }}')"
+                 role="button" 
+                 tabindex="0" 
+                 aria-expanded="false">
+                <div class="section-title">
+                    <span class="section-icon">{{ category_icons[category] }}</span>
+                    <div>
+                        <h3>{{ category_names[category] }}</h3>
+                        <div class="section-description">{{ category_descriptions[category] }}</div>
+                    </div>
+                </div>
+                <span class="section-toggle">▶</span>
+            </div>
+            
+            <div class="section-content" id="section-{{ category.value }}">
+                <div class="config-grid">
+                    {% for field in category_fields[category] %}
+                    <div class="config-item" data-config-key="{{ field.key }}">
+                        <label for="{{ field.key }}" class="config-label">
+                            {{ field.description }}
+                            {% if field.is_required %}
+                                <span class="required-asterisk">*</span>
+                            {% endif %}
+                        </label>
+                        
+                        {% if field.help_text %}
+                            <div class="config-help">{{ field.help_text }}</div>
+                        {% endif %}
+                        
+                        <div class="input-container">
+                            {% if field.type.value == 'boolean' %}
+                                <div class="switch-container">
+                                    <input type="checkbox" 
+                                           id="{{ field.key }}" 
+                                           name="{{ field.key }}" 
+                                           {% if field.value %}checked{% endif %}
+                                           onchange="markConfigChanged('{{ field.key }}')"
+                                           style="display: none;">
+                                    <label for="{{ field.key }}" class="switch">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            {% elif field.type.value == 'password' %}
+                                <input type="password" 
+                                       id="{{ field.key }}" 
+                                       name="{{ field.key }}" 
+                                       value="{{ field.value if not field.is_sensitive else '••••••••' }}"
+                                       placeholder="Enter {{ field.description.lower() }}"
+                                       {% if field.is_required %}required{% endif %}
+                                       oninput="markConfigChanged('{{ field.key }}')"
+                                       class="config-input password-input">
+                                <button type="button" 
+                                        class="password-toggle" 
+                                        onclick="togglePassword('{{ field.key }}')"
+                                        aria-label="Toggle password visibility">
+                                    👁️
+                                </button>
+                            {% elif field.type.value == 'number' %}
+                                <input type="number" 
+                                       id="{{ field.key }}" 
+                                       name="{{ field.key }}" 
+                                       value="{{ field.value }}"
+                                       placeholder="Enter {{ field.description.lower() }}"
+                                       {% if field.is_required %}required{% endif %}
+                                       oninput="markConfigChanged('{{ field.key }}')"
+                                       class="config-input">
+                            {% else %}
+                                <input type="{{ 'email' if field.type.value == 'email' else 'url' if field.type.value == 'url' else 'tel' if field.type.value == 'phone' else 'text' }}" 
+                                       id="{{ field.key }}" 
+                                       name="{{ field.key }}" 
+                                       value="{{ field.value }}"
+                                       placeholder="Enter {{ field.description.lower() }}"
+                                       {% if field.is_required %}required{% endif %}
+                                       oninput="markConfigChanged('{{ field.key }}')"
+                                       class="config-input">
+                            {% endif %}
+                        </div>
+                        
+                        <div class="validation-message" id="validation-{{ field.key }}"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Category Actions -->
+                <div class="category-actions">
+                    {% if category.value in ['email', 'whatsapp', 'sms'] %}
+                    <button onclick="testConfiguration('{{ category.value }}')" class="test-btn">
+                        🧪 Test {{ category_names[category] }}
+                    </button>
+                    {% endif %}
+                    <button onclick="resetCategory('{{ category.value }}')" class="reset-btn">
+                        🔄 Reset Category
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="/static/js/notifications.js"></script>
+    <script src="/static/js/config-manager.js"></script>
+    <script src="/static/js/logo-manager.js"></script>
+
+    <script>
+        // Initialize sections as collapsed by default
+        document.addEventListener('DOMContentLoaded', function() {
+            // Keep logo section expanded by default
+            const logoSection = document.getElementById('section-logo_management');
+            if (logoSection) {
+                logoSection.classList.add('expanded');
+                const logoHeader = document.querySelector('[onclick*="logo_management"]');
+                if (logoHeader) {
+                    logoHeader.setAttribute('aria-expanded', 'true');
+                    logoHeader.querySelector('.section-toggle').textContent = '▼';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

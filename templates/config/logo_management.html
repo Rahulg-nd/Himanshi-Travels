@@ -1,0 +1,82 @@
+<!-- Logo Management Component -->
+<div class="config-section" id="logo-section">
+    <button class="section-header" 
+            onclick="toggleSection('logo_management')" 
+            onkeydown="handleKeyDown(event, 'logo_management')"
+            aria-expanded="true"
+            aria-controls="section-logo_management">
+        <div class="section-title">
+            <span class="section-icon">🖼️</span>
+            <div>
+                <h3>Logo Management</h3>
+                <div class="section-description">Upload and manage your company logo</div>
+            </div>
+        </div>
+        <span class="section-toggle">▼</span>
+    </button>
+    
+    <div class="section-content expanded" id="section-logo_management">
+        <div class="logo-management">
+            <!-- Current Logo Display -->
+            <div class="current-logo">
+                <h4>Current Logo</h4>
+                <div class="logo-preview">
+                    <img id="current-logo-img" src="" alt="Current Logo" style="max-width: 200px; max-height: 100px; border: 1px solid #ddd; border-radius: 8px;">
+                    <div id="logo-info" class="logo-info"></div>
+                </div>
+            </div>
+            
+            <!-- Logo Upload Form -->
+            <div class="logo-upload">
+                <h4>Upload New Logo</h4>
+                <div class="upload-container">
+                    <input type="file" id="logo-file" accept="image/*" style="display: none;">
+                    
+                    <!-- Native Upload Button -->
+                    <button type="button" 
+                            class="upload-button" 
+                            onclick="document.getElementById('logo-file').click()"
+                            aria-describedby="upload-help">
+                        📁 Choose Logo File
+                    </button>
+                    
+                    <!-- Drag and Drop Area -->
+                    <button type="button"
+                            class="upload-area" 
+                            id="upload-area"
+                            aria-describedby="upload-help"
+                            onclick="document.getElementById('logo-file').click()">
+                        <div class="upload-content">
+                            <div class="upload-icon">⬆️</div>
+                            <div class="upload-text">
+                                <p><strong>or drag and drop here</strong></p>
+                                <small id="upload-help-2">Alternative upload method via drag and drop</small>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Preview Area -->
+                <div class="preview-area" id="preview-area" style="display: none;">
+                    <h4>Preview</h4>
+                    <div class="preview-container">
+                        <img id="preview-img" src="" alt="Logo Preview">
+                        <div class="preview-info">
+                            <p><strong>File:</strong> <span id="preview-filename"></span></p>
+                            <p><strong>Size:</strong> <span id="preview-size"></span></p>
+                            <p><strong>Dimensions:</strong> <span id="preview-dimensions"></span></p>
+                        </div>
+                    </div>
+                    <div class="preview-actions">
+                        <button type="button" onclick="uploadLogo()" class="upload-btn">
+                            📤 Upload Logo
+                        </button>
+                        <button type="button" onclick="cancelUpload()" class="cancel-btn">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

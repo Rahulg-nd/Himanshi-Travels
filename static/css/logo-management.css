@@ -1,0 +1,220 @@
+/* Logo Management Specific Styles */
+
+.logo-management {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+.current-logo, .logo-upload {
+    background: rgba(248, 249, 250, 0.8);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.current-logo h4, .logo-upload h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.logo-preview {
+    text-align: center;
+}
+
+.logo-preview img {
+    max-width: 200px;
+    max-height: 100px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    padding: 10px;
+}
+
+.logo-info {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+/* Upload Button */
+.upload-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-button:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.upload-button:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.upload-button:active {
+    transform: translateY(0);
+}
+
+.upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.upload-area {
+    border: 2px dashed #007bff;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(0, 123, 255, 0.05);
+    width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.upload-area:hover {
+    border-color: #0056b3;
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.upload-area:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.upload-area.dragover {
+    border-color: #28a745;
+    background: rgba(40, 167, 96, 0.1);
+}
+
+.upload-content {
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+    opacity: 0.7;
+}
+
+.upload-text p {
+    margin: 5px 0;
+    color: #2c3e50;
+}
+
+.upload-text strong {
+    color: #007bff;
+}
+
+.upload-text small {
+    color: #6c757d;
+    display: block;
+    margin-top: 10px;
+}
+
+/* Preview Area */
+.preview-area {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(40, 167, 96, 0.05);
+    border: 1px solid #28a745;
+    border-radius: 8px;
+}
+
+.preview-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.preview-container img {
+    max-width: 150px;
+    max-height: 75px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    padding: 5px;
+}
+
+.preview-info {
+    flex: 1;
+}
+
+.preview-info p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #2c3e50;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.upload-btn, .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-btn {
+    background: #28a745;
+    color: white;
+}
+
+.upload-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .logo-management {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .preview-container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .preview-actions {
+        justify-content: center;
+    }
+}

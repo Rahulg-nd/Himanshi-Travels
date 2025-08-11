@@ -468,6 +468,15 @@ def delete_config(key: str) -> bool:
         return cur.rowcount > 0
 
 
+def delete_all_config() -> bool:
+    """Delete all configuration values"""
+    with get_db_connection() as con:
+        cur = con.cursor()
+        cur.execute("DELETE FROM app_config")
+        con.commit()
+        return cur.rowcount >= 0
+
+
 def get_all_bookings_for_export() -> List[Dict[str, Any]]:
     """Get all bookings for export purposes"""
     with get_db_connection() as con:
